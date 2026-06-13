@@ -1,0 +1,22 @@
+# Netlify config — monorepo for Happy Pumpkin web dashboards
+# Primary deploy: KOL Command Center (Hasna-facing).
+# Other dashboards migrate in later as additional Netlify sites (own base dir)
+# or via root landing + redirects.
+
+[build]
+  publish = "apps/kol-command-center"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# SPA-style fallback not needed (multi-file static). Cache headers for assets:
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

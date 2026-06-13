@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Netlify
+.netlify/
+
+# Build artifacts / archives
+*.zip
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+
+# Excel lock/temp files
+~$*.xlsx

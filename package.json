@@ -1,0 +1,15 @@
+{
+  "name": "hp-dashboards",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Happy Pumpkin web dashboards monorepo (KOL Command Center + sales + creative hub)",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}

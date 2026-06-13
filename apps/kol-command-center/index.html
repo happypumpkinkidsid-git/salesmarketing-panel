@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KOL Command Center — Happy Pumpkin</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <div class="tb-logo">🎃 KOL <span>Command Center</span></div>
+        <div class="tb-sub">Happy Pumpkin · Campaign &amp; KOL Management</div>
+      </div>
+      <div class="tb-spacer"></div>
+      <span class="mode-badge local" id="modeBadge">● …</span>
+      <button class="btn btn-ghost" onclick="exportData()">⤓ Export</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- §1 LATEST UPDATE (first heading) -->
+    <div class="latest-update" id="latestUpdate"></div>
+
+    <!-- §2 AT A GLANCE -->
+    <section class="section">
+      <div class="section-head"><h2>At a Glance</h2></div>
+      <div class="kpis" id="kpis"></div>
+    </section>
+
+    <!-- §3 ACTIVE CAMPAIGN — JUNI -->
+    <section class="section">
+      <div class="section-head">
+        <h2>Active Campaign — Juni 2026</h2>
+        <span class="count" id="juniCount">0</span>
+        <span class="hint">deal aktif bulan ini · klik untuk detail</span>
+      </div>
+      <div class="juni-grid" id="juni"></div>
+    </section>
+
+    <!-- §4 KOL TRACKER -->
+    <section class="section">
+      <div class="section-head">
+        <h2>KOL Tracker — Keputusan Manajemen</h2>
+        <span class="count" id="trackerCount">0</span>
+        <span class="hint">keputusan + rate card + negosiasi (klik baris)</span>
+      </div>
+      <div class="tk-filters">
+        <button class="tk-filter active" onclick="setTrackerFilter('working',this)">Sedang diproses</button>
+        <button class="tk-filter" onclick="setTrackerFilter('DEAL',this)">Deal</button>
+        <button class="tk-filter" onclick="setTrackerFilter('NEGOSIASI',this)">Negosiasi</button>
+        <button class="tk-filter" onclick="setTrackerFilter('PENDING',this)">Pending</button>
+        <button class="tk-filter" onclick="setTrackerFilter('HOLD',this)">Hold</button>
+        <button class="tk-filter" onclick="setTrackerFilter('all',this)">Semua</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr>
+            <th>KOL</th><th>Status</th><th>Keputusan</th><th>Brief</th><th>Produk</th>
+            <th>Bulan</th><th>Cash</th><th>Barter</th><th>Tgl Keputusan</th><th></th>
+          </tr></thead>
+          <tbody id="trackerBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- §5 KOL POOL -->
+    <section class="section">
+      <div class="section-head">
+        <h2>KOL Pool — Sourcing</h2>
+        <span class="count" id="poolCount">0</span>
+        <span class="hint">seluruh kandidat · klik untuk proses</span>
+      </div>
+      <div class="pool-controls">
+        <input type="search" placeholder="Cari handle / nama / niche…" oninput="onPoolSearch(this.value)">
+        <select id="poolTier" onchange="onPoolTier(this.value)"><option value="">Semua Tier</option></select>
+        <select id="poolStatus" onchange="onPoolStatus(this.value)">
+          <option value="">Semua Status</option>
+          <option>KANDIDAT</option><option>PENDING</option><option>HOLD</option>
+          <option>NEGOSIASI</option><option>DEAL</option><option>BARTER</option>
+          <option>SELESAI</option><option>CANCEL</option>
+        </select>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>KOL</th><th>Platform</th><th>Status</th><th>Ratecard awal</th><th>Kontak</th><th></th></tr></thead>
+          <tbody id="poolBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- DRAWER -->
+  <div class="drawer-wrap" id="drawerWrap">
+    <div class="drawer-backdrop" onclick="closeDrawer()"></div>
+    <aside class="drawer" id="drawer"></aside>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/data.js?v=1"></script>
+  <script src="js/store.js?v=1"></script>
+  <script src="js/app.js?v=1"></script>
+</body>
+</html>
