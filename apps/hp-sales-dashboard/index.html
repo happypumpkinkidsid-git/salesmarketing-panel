@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HP Sales Network</title>
+  <link rel="stylesheet" href="css/main.css?v=3">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">Happy <span>Pumpkin</span></div>
+      <div class="sub">Sales Network</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Today</div>
+      <div class="nav-item active" data-section="brief">
+        <span class="icon">📋</span> Daily Brief
+      </div>
+      <div class="nav-item" data-section="performance">
+        <span class="icon">📊</span> Performance
+      </div>
+
+      <div class="nav-section-label">Online</div>
+      <div class="nav-item" data-section="channels">
+        <span class="icon">🛒</span> Online Channels
+      </div>
+
+      <div class="nav-section-label">Offline</div>
+      <div class="nav-item" data-section="offline">
+        <span class="icon">🏪</span> Distributor Network
+        <span class="count-badge" id="distBadge" style="display:none"></span>
+      </div>
+      <div class="nav-item" data-section="dist-intel">
+        <span class="icon">🧠</span> Distributor Intel
+      </div>
+      <div class="nav-item" data-section="leads">
+        <span class="icon">🎯</span> Leads Pipeline
+        <span class="count-badge hot" id="leadBadge" style="display:none"></span>
+      </div>
+
+      <div class="nav-section-label">Operations</div>
+      <div class="nav-item locked" data-section="inventory">
+        <span class="icon">📦</span> Inventory & Stock
+        <span class="nav-lock">🔒</span>
+      </div>
+      <div class="nav-item locked" data-section="sessions">
+        <span class="icon">📱</span> Live Sessions
+        <span class="nav-lock">🔒</span>
+      </div>
+      <div class="nav-item locked" data-section="orders">
+        <span class="icon">🧾</span> Order Ops
+        <span class="nav-lock">🔒</span>
+      </div>
+
+      <div class="nav-section-label">Intelligence</div>
+      <div class="nav-item locked" data-section="customers">
+        <span class="icon">👤</span> Customer Analytics
+        <span class="nav-lock">🔒</span>
+      </div>
+      <div class="nav-item locked" data-section="campaigns">
+        <span class="icon">📣</span> Campaign Calendar
+        <span class="nav-lock">🔒</span>
+      </div>
+
+      <div class="nav-section-label">Content</div>
+      <div class="nav-item" data-section="kol">
+        <span class="icon">🌟</span> KOL Brief Generator
+      </div>
+      <div class="nav-item" data-section="kol-program">
+        <span class="icon">🎯</span> KOL Program
+        <span class="count-badge" id="kolProgramBadge" style="display:none"></span>
+      </div>
+
+      <div class="nav-section-label">Leadership</div>
+      <div class="nav-item" data-section="executive">
+        <span class="icon">👔</span> Executive View
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="../hp-dashboard/index.html" class="hub-link">🎨 Creative Hub →</a>
+      <div class="refresh-info" id="lastRefreshLabel">Not yet synced</div>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadAllData()">↻ Refresh Data</button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="topbar-title" id="topbarTitle">Daily Brief</div>
+        <div class="topbar-sub" id="topbarSub">Loading…</div>
+      </div>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </header>
+
+    <div class="content">
+      <div id="section-brief"       class="section active"></div>
+      <div id="section-performance" class="section"></div>
+      <div id="section-channels"    class="section"></div>
+      <div id="section-offline"     class="section">
+        <div id="offline-tab-bar" class="section-tab-bar">
+          <button class="stab active" data-tab="directory" onclick="switchOfflineTab('directory')">🏪 Directory</button>
+          <button class="stab" data-tab="analytics" onclick="switchOfflineTab('analytics')">📊 Analytics (Jan 2025–Mei 2026)</button>
+        </div>
+        <div id="offline-directory"></div>
+        <div id="offline-analytics" style="display:none"></div>
+      </div>
+      <div id="section-dist-intel"  class="section"></div>
+      <div id="section-leads"       class="section"></div>
+      <div id="section-kol"          class="section"></div>
+      <div id="section-kol-program"  class="section"></div>
+      <div id="section-inventory"   class="section"></div>
+      <div id="section-sessions"    class="section"></div>
+      <div id="section-orders"      class="section"></div>
+      <div id="section-customers"   class="section"></div>
+      <div id="section-campaigns"   class="section"></div>
+      <div id="section-executive"   class="section"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Lead detail modal -->
+<div class="modal-overlay" id="leadModal" style="display:none" onclick="closeLeadModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modalLeadTitle"></div>
+      <button class="modal-close" onclick="closeLeadModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalLeadBody"></div>
+  </div>
+</div>
+
+<script src="js/kol-pool-data.js?v=2"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/fulfillment-data.js?v=1"></script>
+<script src="js/app.js?v=4"></script>
+</body>
+</html>

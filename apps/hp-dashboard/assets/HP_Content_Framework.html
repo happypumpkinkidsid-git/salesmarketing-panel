@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Pumpkin — Content Framework</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
+
+  :root {
+    /* Brand palette */
+    --hp-orange:     #F36F3B;
+    --hp-orange-dk:  #D45A28;
+    --hp-orange-lt:  #FFF0E8;
+    --hp-sun:        #FBAF40;
+    --hp-blush:      #FADCD8;
+    --hp-sage:       #B8DAD3;
+    --hp-terra:      #E89064;
+    --hp-cream:      #EEE5C2;
+
+    /* Dashboard neutrals */
+    --bg:            #F3EDE5;
+    --surface:       #FFFFFF;
+    --surface-2:     #FBF7F3;
+    --border:        #EBE3D8;
+    --border-strong: #D9CFC2;
+
+    /* Text scale */
+    --ink:           #1A1C35;
+    --ink-2:         #3D3F5A;
+    --ink-3:         #6B6D88;
+    --ink-4:         #9899B0;
+
+    /* Sidebar */
+    --sidebar-bg:    #14162A;
+    --sidebar-w:     272px;
+
+    /* Legacy aliases (used in inline styles in markup) */
+    --hp-ink:        #1A1C35;
+    --hp-ink-soft:   #3D3F5A;
+    --hp-mid:        #6B6D88;
+    --hp-line:       #EBE3D8;
+    --hp-cream-2:    #FBF7F3;
+
+    /* Type */
+    --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+    /* Shadows */
+    --shadow-card: 0 1px 3px rgba(20,22,42,.06), 0 4px 20px rgba(20,22,42,.06);
+    --shadow-hover: 0 2px 8px rgba(20,22,42,.1), 0 8px 32px rgba(20,22,42,.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink);
+    background: var(--bg);
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    min-height: 100vh;
+  }
+
+  /* ── Language toggle ──────────────────────────── */
+  .lid { display: none; }
+  body.id-mode .len { display: none; }
+  body.id-mode .lid { display: inline; }
+  body.id-mode p.lid, body.id-mode li.lid, body.id-mode .bl.lid { display: block; }
+  body.id-mode td.lid, body.id-mode th.lid { display: table-cell; }
+  body.id-mode .len-block { display: none; }
+  body.id-mode .lid-block { display: block; }
+  .lid-block { display: none; }
+
+  /* ── SIDEBAR ──────────────────────────────────── */
+  .sidebar {
+    position: sticky; top: 0; height: 100vh;
+    overflow-y: auto; overflow-x: hidden;
+    background: var(--sidebar-bg);
+    display: flex; flex-direction: column;
+    z-index: 100;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,.1) transparent;
+    border-right: 1px solid rgba(255,255,255,.04);
+  }
+  .sidebar::-webkit-scrollbar { width: 3px; }
+  .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 4px; }
+
+  /* Brand block */
+  .sidebar-brand {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    flex-shrink: 0;
+  }
+  .sidebar-logo {
+    font-size: 18px; font-weight: 800;
+    color: #fff; letter-spacing: -.4px; line-height: 1.2;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sidebar-logo-dot {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--hp-orange);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .sidebar-logo span { color: var(--hp-orange); }
+  .sidebar-tagline {
+    font-size: 10px; font-weight: 600; color: rgba(255,255,255,.32);
+    text-transform: uppercase; letter-spacing: .14em; margin-top: 8px;
+    padding-left: 36px;
+  }
+
+  /* Lang button */
+  #lang-btn {
+    margin: 16px 20px 0;
+    background: rgba(243,111,59,.1); color: var(--hp-orange);
+    border: 1px solid rgba(243,111,59,.24); border-radius: 10px;
+    padding: 9px 16px; font-family: var(--font); font-weight: 700; font-size: 11.5px;
+    cursor: pointer; text-align: center; transition: background .15s, border-color .15s;
+    letter-spacing: .03em; width: calc(100% - 40px); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  #lang-btn:hover { background: rgba(243,111,59,.18); border-color: rgba(243,111,59,.4); }
+
+  /* Nav */
+  .sidebar-nav { padding: 12px 0 32px; flex: 1; }
+
+  .nav-group-label {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .16em;
+    color: rgba(255,255,255,.22); padding: 20px 24px 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-group-label::after {
+    content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.07);
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 16px 7px 22px;
+    color: rgba(255,255,255,.5); text-decoration: none;
+    font-size: 12.5px; font-weight: 500;
+    transition: color .15s, background .15s;
+    line-height: 1.35; border-left: 3px solid transparent;
+    margin: 1px 0;
+  }
+  .nav-item:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.05); }
+  .nav-item.is-active {
+    color: #fff; background: rgba(243,111,59,.13);
+    border-left-color: var(--hp-orange); font-weight: 600;
+  }
+
+  .nav-num {
+    font-size: 9px; font-weight: 800; letter-spacing: .06em;
+    background: rgba(255,255,255,.08); color: rgba(255,255,255,.4);
+    border-radius: 5px; padding: 2px 6px; min-width: 28px; text-align: center;
+    transition: background .15s, color .15s;
+  }
+  .nav-item:hover .nav-num { background: rgba(255,255,255,.12); color: rgba(255,255,255,.7); }
+  .nav-item.is-active .nav-num { background: rgba(243,111,59,.3); color: var(--hp-orange); }
+
+  /* Footer */
+  .sidebar-footer {
+    padding: 16px 24px 24px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    font-size: 11px; color: rgba(255,255,255,.24); line-height: 1.7; flex-shrink: 0;
+  }
+
+  /* ── MAIN ─────────────────────────────────────── */
+  .main { min-width: 0; display: flex; flex-direction: column; }
+
+  /* Topbar */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(243,237,229,.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 48px;
+    height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-left {
+    font-size: 12px; font-weight: 600; color: var(--ink-3);
+    letter-spacing: .02em; display: flex; align-items: center; gap: 6px;
+  }
+  .topbar-left::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--hp-orange); display: inline-block;
+  }
+  .topbar-badge {
+    font-size: 10px; font-weight: 700; background: var(--hp-orange-lt);
+    color: var(--hp-orange); border: 1px solid rgba(243,111,59,.2);
+    border-radius: 20px; padding: 2px 10px; letter-spacing: .04em; text-transform: uppercase;
+  }
+
+  /* Cover / Hero */
+  .cover {
+    background: linear-gradient(140deg, #E8581A 0%, var(--hp-terra) 45%, var(--hp-sun) 100%);
+    padding: 56px 56px 52px;
+    position: relative; overflow: hidden; flex-shrink: 0;
+  }
+  .cover::before {
+    content: ''; position: absolute; top: -120px; right: -80px;
+    width: 420px; height: 420px; border-radius: 50%;
+    background: rgba(255,255,255,.06);
+  }
+  .cover::after {
+    content: ''; position: absolute; bottom: -80px; left: -60px;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: rgba(255,255,255,.04);
+  }
+  .cover-eyebrow {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .18em;
+    color: rgba(255,255,255,.6); text-transform: uppercase; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .cover-eyebrow::before {
+    content: ''; width: 20px; height: 2px; background: rgba(255,255,255,.4);
+    display: inline-block;
+  }
+  .cover-title {
+    font-size: 52px; font-weight: 800; color: #fff;
+    line-height: 1.0; letter-spacing: -1px; margin-bottom: 12px;
+  }
+  .cover-sub {
+    font-size: 17px; font-weight: 500;
+    color: rgba(255,255,255,.85); margin-bottom: 28px; letter-spacing: -.1px;
+  }
+  .cover-meta {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.16); border-radius: 10px;
+    padding: 9px 20px; font-size: 13px; color: rgba(255,255,255,.9);
+    font-weight: 600; backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.2);
+  }
+
+  /* ── CONTENT AREA ─────────────────────────────── */
+  .content { padding: 40px 52px 96px; flex: 1; }
+
+  /* Section cards */
+  .section {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 40px 44px;
+    margin-bottom: 24px;
+    scroll-margin-top: 28px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow .2s;
+  }
+  .section:hover { box-shadow: var(--shadow-hover); }
+
+  .section-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 28px; padding-bottom: 20px;
+    border-bottom: 1.5px solid var(--border);
+  }
+  .section-num {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .14em;
+    color: var(--hp-orange); background: var(--hp-orange-lt);
+    border: 1px solid rgba(243,111,59,.2);
+    border-radius: 8px; padding: 6px 12px;
+    text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 21px; font-weight: 800; color: var(--ink);
+    line-height: 1.2; letter-spacing: -.3px;
+  }
+
+  /* Typography */
+  h3 {
+    font-size: 10px; font-weight: 800; color: var(--hp-orange);
+    margin: 32px 0 14px; text-transform: uppercase; letter-spacing: .14em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h3::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--border) 0%, transparent 100%);
+  }
+  p { margin-bottom: 14px; line-height: 1.8; color: var(--ink-2); }
+  p:last-child { margin-bottom: 0; }
+  strong { font-weight: 700; color: var(--ink); }
+  em { font-style: italic; }
+  code {
+    font-family: 'Menlo', 'Monaco', monospace;
+    background: var(--hp-orange-lt); color: var(--hp-orange-dk);
+    padding: 2px 7px; border-radius: 5px; font-size: 12.5px;
+    border: 1px solid rgba(243,111,59,.15);
+  }
+
+  /* Callouts */
+  .callout { border-radius: 14px; padding: 20px 24px; margin: 18px 0; border: 1.5px solid transparent; }
+  .callout-orange { background: #FFF3EC; border-color: #F8BFA8; }
+  .callout-cream  { background: var(--surface-2); border-color: var(--border-strong); }
+  .callout-sage   { background: #EEF8F5; border-color: #B5E0D8; }
+  .callout-title  {
+    font-size: 10px; font-weight: 800; color: var(--hp-orange);
+    text-transform: uppercase; letter-spacing: .12em; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .callout-title::before { content: '▸'; font-size: 9px; }
+  .callout p { font-size: 14.5px; margin-bottom: 10px; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* Formula box */
+  .formula-box {
+    background: linear-gradient(135deg, var(--hp-orange) 0%, #E05B28 100%);
+    border-radius: 14px; padding: 22px 32px; margin: 18px 0; text-align: center;
+    box-shadow: 0 4px 20px rgba(243,111,59,.3);
+  }
+  .formula-text {
+    font-size: 16.5px; font-weight: 800; color: #fff;
+    line-height: 1.55; letter-spacing: -.1px;
+  }
+
+  /* ── TABLES ───────────────────────────────────── */
+  .table-wrap { overflow-x: auto; margin: 18px 0; border-radius: 14px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+
+  thead th {
+    background: var(--ink); color: #fff; font-weight: 700;
+    padding: 13px 18px; text-align: left; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: .08em; font-family: var(--font);
+  }
+  thead th:nth-child(2) { background: var(--ink-2); }
+  thead th:nth-child(3) { background: #3D6B65; }
+
+  tbody tr:nth-child(even) td { background: var(--surface-2); }
+  tbody tr:nth-child(odd)  td { background: var(--surface); }
+  tbody tr:hover td { background: #FBF4EE; }
+  tbody td {
+    padding: 13px 18px; border-bottom: 1px solid var(--border);
+    vertical-align: top; line-height: 1.75; color: var(--ink-2);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td:first-child { font-weight: 600; color: var(--ink); white-space: nowrap; }
+
+  .two-col tbody td:first-child {
+    background: var(--hp-orange-lt); color: var(--hp-orange-dk);
+    font-weight: 700; width: 180px; white-space: normal;
+    border-right: 1px solid rgba(243,111,59,.15);
+  }
+  .checklist tbody td:first-child {
+    background: var(--hp-orange-lt); color: var(--hp-ink); font-size: 16px;
+    text-align: center; width: 40px; padding: 12px; white-space: nowrap;
+  }
+  .checklist tbody td:nth-child(2) {
+    font-weight: 700; color: var(--hp-orange-dk); width: 140px;
+    white-space: normal; font-size: 13px;
+  }
+
+  .dos-donts thead th:first-child  { background: #4A4C65; }
+  .dos-donts thead th:nth-child(2) { background: #2D6B2D; }
+  .dos-donts thead th:nth-child(3) { background: #8B2020; }
+  .dos-donts tbody td:nth-child(2) { background: #F2FAF2; color: #1A4A1A; }
+  .dos-donts tbody td:nth-child(3) { background: #FFF2F2; color: #6A1515; }
+  .dos-donts tbody tr:nth-child(even) td:nth-child(2) { background: #E8F5E8; }
+  .dos-donts tbody tr:nth-child(even) td:nth-child(3) { background: #FAE8E8; }
+
+  /* ── GOAL CARDS ───────────────────────────────── */
+  .goal-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin: 18px 0; }
+  .goal-card {
+    border-radius: 18px; padding: 26px 22px; border: 1.5px solid transparent;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .goal-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .goal-reach { background: #FFF2EC; border-color: #F4B89A; }
+  .goal-cons  { background: #FFFAED; border-color: #F0D890; }
+  .goal-conv  { background: #EEF8F5; border-color: #A8D8D0; }
+  .goal-label {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .14em;
+    text-transform: uppercase; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .goal-label::before { content: '●'; font-size: 7px; }
+  .goal-reach .goal-label { color: var(--hp-orange); }
+  .goal-cons .goal-label  { color: #9A6800; }
+  .goal-conv .goal-label  { color: #2E7068; }
+  .goal-name {
+    font-size: 22px; font-weight: 800; color: var(--ink);
+    margin-bottom: 16px; letter-spacing: -.3px;
+  }
+  .goal-row { margin-bottom: 12px; font-size: 13.5px; }
+  .goal-row-label {
+    font-weight: 700; color: var(--ink-4); font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px;
+  }
+  .goal-row-val { color: var(--ink-2); line-height: 1.6; }
+
+  /* ── METRIC CARDS ─────────────────────────────── */
+  .metric-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin: 18px 0; }
+  .metric-card {
+    background: var(--surface-2); border-radius: 14px;
+    padding: 20px 14px; text-align: center;
+    border: 1.5px solid var(--border);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .metric-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .metric-icon { font-size: 24px; margin-bottom: 8px; }
+  .metric-name {
+    font-size: 10px; font-weight: 800; color: var(--hp-orange);
+    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px;
+  }
+  .metric-diag { font-size: 12.5px; color: var(--ink-3); line-height: 1.55; }
+
+  /* ── QUICK REF ────────────────────────────────── */
+  .qr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+  .qr-card {
+    background: var(--surface-2); border-radius: 16px;
+    padding: 22px 24px; border: 1.5px solid var(--border);
+  }
+  .qr-card-title {
+    font-size: 10px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .13em; color: var(--hp-orange); margin-bottom: 16px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .qr-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 13px; align-items: flex-start; }
+  .qr-label { font-weight: 700; color: var(--ink); min-width: 88px; font-size: 12px; padding-top: 2px; flex-shrink: 0; }
+  .qr-val { color: var(--ink-2); line-height: 1.55; }
+
+  /* ── LISTS ────────────────────────────────────── */
+  ul { list-style: none; padding: 0; margin: 14px 0 18px; }
+  ul li {
+    padding: 6px 0 6px 28px; position: relative;
+    font-size: 15px; line-height: 1.75; color: var(--ink-2);
+  }
+  ul li::before {
+    content: '→'; position: absolute; left: 4px;
+    color: var(--hp-orange); font-weight: 700; font-size: 13px; top: 7px;
+  }
+
+  /* ── SECTION 12 ───────────────────────────────── */
+  .s12-card {
+    background: var(--surface-2); border-radius: 14px;
+    padding: 20px 24px; border: 1px solid var(--border); margin-bottom: 12px;
+    border-left: 3px solid var(--hp-orange);
+  }
+  .s12-card-title {
+    font-weight: 800; color: var(--hp-orange-dk);
+    font-size: 10.5px; letter-spacing: .1em; margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .s12-card p { font-size: 14.5px; margin: 0; line-height: 1.75; }
+
+  .hook-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+  .hook-card {
+    background: var(--surface-2); border-radius: 12px;
+    padding: 16px 20px; border: 1px solid var(--border); font-size: 13.5px;
+    color: var(--ink-2); line-height: 1.65;
+  }
+  .hook-card strong {
+    color: var(--hp-orange-dk); display: block; margin-bottom: 5px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800;
+  }
+
+  .cal-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+  .cal-card {
+    background: var(--surface-2); border-radius: 12px;
+    padding: 16px 20px; border: 1px solid var(--border); font-size: 13.5px;
+    color: var(--ink-2); line-height: 1.65;
+  }
+  .cal-card strong {
+    color: var(--hp-orange-dk); display: block; margin-bottom: 5px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800;
+  }
+
+  /* ── INSTAGRAM 2026 UPDATE BADGE ─────────────── */
+  .ig-update-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #833AB4, #FD1D1D, #FCAF45);
+    border-radius: 8px; padding: 4px 12px;
+    font-size: 9.5px; font-weight: 800; color: #fff;
+    letter-spacing: .1em; text-transform: uppercase;
+    flex-shrink: 0; margin-bottom: 18px;
+  }
+  .callout-ig {
+    border-radius: 14px; padding: 20px 24px; margin: 18px 0;
+    background: #FDF4FF;
+    border: 1.5px solid #D8AAEF;
+  }
+  .callout-ig .callout-title { color: #7B2FBE; }
+  .callout-ig .callout-title::before { content: '▸'; }
+  .callout-ig p { font-size: 14.5px; margin-bottom: 10px; color: var(--ink-2); }
+  .callout-ig p:last-child { margin-bottom: 0; }
+
+  /* Metric grid — 6-col for 2026 */
+  .metric-grid-6 { display: grid; grid-template-columns: repeat(6,1fr); gap: 10px; margin: 18px 0; }
+  .metric-rank {
+    font-size: 9px; font-weight: 900; letter-spacing: .06em;
+    text-transform: uppercase; margin-bottom: 4px; display: block;
+    padding: 2px 6px; border-radius: 4px; display: inline-block;
+  }
+  .rank-1 { background: #FFF0E8; color: var(--hp-orange); border: 1px solid rgba(243,111,59,.25); }
+  .rank-2 { background: #F0F4FF; color: #3B5BDB; border: 1px solid rgba(59,91,219,.2); }
+  .rank-low { background: var(--surface-2); color: var(--ink-4); border: 1px solid var(--border); }
+
+  /* Trial Reels card */
+  .trial-reel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .trial-step {
+    background: var(--surface-2); border-radius: 12px; padding: 16px 20px;
+    border: 1px solid var(--border); font-size: 13.5px; color: var(--ink-2);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .trial-step-num {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: var(--hp-orange-lt); color: var(--hp-orange);
+    font-size: 11px; font-weight: 900; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; border: 1px solid rgba(243,111,59,.2);
+  }
+  .trial-step-body strong { color: var(--ink); font-weight: 700; display: block; margin-bottom: 3px; font-size: 13px; }
+
+  /* ── FOOTER ───────────────────────────────────── */
+  .footer {
+    text-align: center; padding: 32px 52px 52px;
+    color: var(--ink-4); font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+  .footer strong { color: var(--hp-orange); font-weight: 700; }
+
+  /* ── RESPONSIVE ───────────────────────────────── */
+  @media (max-width: 960px) {
+    body { grid-template-columns: 1fr; }
+    .sidebar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: auto; flex-direction: row;
+      overflow-x: auto; overflow-y: hidden; z-index: 200;
+    }
+    .sidebar-brand, .sidebar-footer { display: none; }
+    .sidebar-nav { display: flex; flex-direction: row; padding: 0; overflow-x: auto; flex: 1; }
+    .nav-group-label { display: none; }
+    .nav-item {
+      padding: 14px 12px; white-space: nowrap;
+      font-size: 11.5px; border-left: none; border-top: 2px solid transparent;
+    }
+    .nav-item.is-active { border-top-color: var(--hp-orange); border-left: none; }
+    #lang-btn { margin: 8px 10px; white-space: nowrap; width: auto; flex-shrink: 0; border-radius: 8px; }
+    .topbar { padding: 0 24px; }
+    .cover { padding: 40px 28px 36px; }
+    .cover-title { font-size: 38px; }
+    .content { padding: 24px 20px 120px; }
+    .section { padding: 24px 22px; }
+    .goal-grid { grid-template-columns: 1fr; }
+    .metric-grid { grid-template-columns: repeat(3,1fr); }
+    .metric-grid-6 { grid-template-columns: repeat(3,1fr); }
+    .trial-reel-grid { grid-template-columns: 1fr; }
+    .qr-grid, .hook-grid, .cal-grid { grid-template-columns: 1fr; }
+  }
+  @media print {
+    body { grid-template-columns: 1fr; background: #fff; }
+    .sidebar, .topbar { display: none; }
+    .section { box-shadow: none; page-break-inside: avoid; }
+    .content { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-logo">
+      <span class="sidebar-logo-dot">🎃</span>
+      <span>happy <span>pumpkin</span></span>
+    </div>
+    <div class="sidebar-tagline">
+      <span class="len">Content Framework &middot; 2026</span>
+      <span class="lid">Kerangka Konten &middot; 2026</span>
+    </div>
+  </div>
+  <button id="lang-btn" onclick="toggleLang()">&#x1F1EE;&#x1F1E9; Bahasa Indonesia</button>
+  <nav class="sidebar-nav">
+    <div class="nav-group-label"><span class="len">Framework</span><span class="lid">Kerangka</span></div>
+    <a href="#s1" class="nav-item"><span class="nav-num">01</span><span class="len">Who We Are</span><span class="lid">Siapa Kami</span></a>
+    <a href="#s2" class="nav-item"><span class="nav-num">02</span><span class="len">Casual Pathway</span><span class="lid">Jalur Casual</span></a>
+    <a href="#s3" class="nav-item"><span class="nav-num">03</span><span class="len">Content Goals</span><span class="lid">Tujuan Konten</span></a>
+    <a href="#s4" class="nav-item"><span class="nav-num">04</span><span class="len">Audience Formula</span><span class="lid">Formula Audiens</span></a>
+    <a href="#s5" class="nav-item"><span class="nav-num">05</span><span class="len">Finding Ideas</span><span class="lid">Mencari Ide</span></a>
+    <a href="#s6" class="nav-item"><span class="nav-num">06</span><span class="len">Building Hooks</span><span class="lid">Membuat Hook</span></a>
+    <a href="#s7" class="nav-item"><span class="nav-num">07</span><span class="len">Success Formula</span><span class="lid">Formula Sukses</span></a>
+    <a href="#s8" class="nav-item"><span class="nav-num">08</span><span class="len">Performance</span><span class="lid">Performa</span></a>
+    <a href="#s9" class="nav-item"><span class="nav-num">09</span><span class="len">Evaluation</span><span class="lid">Evaluasi</span></a>
+    <a href="#s10" class="nav-item"><span class="nav-num">10</span><span class="len">Checklist</span><span class="lid">Checklist</span></a>
+    <a href="#s11" class="nav-item"><span class="nav-num">11</span><span class="len">Dos &amp; Don'ts</span><span class="lid">Boleh &amp; Jangan</span></a>
+    <a href="#s12" class="nav-item"><span class="nav-num">12</span><span class="len">Supplementary</span><span class="lid">Referensi</span></a>
+    <a href="#qr" class="nav-item"><span class="nav-num">&#x26A1;</span><span class="len">Quick Reference</span><span class="lid">Ref. Cepat</span></a>
+  </nav>
+  <div class="sidebar-footer">CV Dwi Putra Mandiri<br>Jakarta &middot; 2026</div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="len">Social Media Content Framework</span>
+    <span class="lid">Kerangka Konten Media Sosial</span>
+  </div>
+  <div class="topbar-badge">
+    <span class="len">CV Dwi Putra Mandiri · 2026</span>
+    <span class="lid">CV Dwi Putra Mandiri · 2026</span>
+  </div>
+</div>
+
+<div class="cover">
+  <div class="cover-eyebrow">CV Dwi Putra Mandiri</div>
+  <div class="cover-title">happy pumpkin</div>
+  <div class="cover-sub"><span class="len">Social Media Content Framework</span><span class="lid">Kerangka Konten Media Sosial</span></div>
+  <div class="cover-meta"><span class="len">For: Social Media Specialist &amp; Creative Team &nbsp;&middot;&nbsp; 2026</span><span class="lid">Untuk: Spesialis Media Sosial &amp; Tim Kreatif &nbsp;&middot;&nbsp; 2026</span></div>
+</div>
+
+<div class="content">
+
+<!-- S1 -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <span class="section-title"><span class="len">Who We Are &amp; Brand Positioning</span><span class="lid">Siapa Kami &amp; Positioning Brand</span></span>
+  </div>
+  <p class="len"><strong>Happy Pumpkin</strong> is a Jakarta-based baby &amp; kids apparel brand under CV Dwi Putra Mandiri (DPM). With over 30 years in fashion manufacturing, we are now moving from a B2B factory model into a <strong>retail-forward, consumer-facing brand</strong>.</p>
+  <p class="lid"><strong>Happy Pumpkin</strong> adalah brand pakaian bayi &amp; anak berbasis Jakarta di bawah CV Dwi Putra Mandiri (DPM). Dengan pengalaman lebih dari 30 tahun di industri manufaktur fashion, kami kini bertransisi dari model pabrik B2B menjadi <strong>brand yang berorientasi retail dan langsung menyasar konsumen</strong>.</p>
+  <p class="len">Our target customer is <strong>Indonesian mums in the B&ndash;C socio-economic class</strong> &mdash; aspiring, value-conscious, style-aware. They shop on Shopee (our main channel), TikTok Shop, and Tokopedia.</p>
+  <p class="lid">Target pelanggan kami adalah <strong>ibu-ibu Indonesia dari kelas sosioekonomi B&ndash;C</strong> &mdash; punya aspirasi, sadar nilai, dan peka terhadap gaya. Mereka berbelanja di Shopee (kanal utama kami), TikTok Shop, dan Tokopedia.</p>
+  <div class="formula-box">
+    <div class="formula-text len">"Be Indonesia's #1 brand for mass, aspiring audiences looking for value-for-money stylish kidswear and innovative, functional babywear."</div>
+    <div class="formula-text lid">"Jadi brand #1 Indonesia untuk mass market yang aspirasional yang mencari kidswear stylish harga terjangkau dan babywear yang inovatif &amp; fungsional."</div>
+  </div>
+  <h3><span class="len">Brand Positioning Statement</span><span class="lid">Pernyataan Positioning Brand</span></h3>
+  <div class="table-wrap"><table class="two-col"><tbody>
+    <tr><td><span class="len">We are</span><span class="lid">Kami adalah</span></td><td><strong>happy pumpkin</strong></td></tr>
+    <tr><td><span class="len">We talk about</span><span class="lid">Kami membahas</span></td><td><span class="len">stylish, value-for-money kidswear &amp; functional babywear</span><span class="lid">kidswear stylish harga terjangkau &amp; babywear fungsional</span></td></tr>
+    <tr><td><span class="len">For</span><span class="lid">Untuk</span></td><td><span class="len">Indonesian mums (B&ndash;C socio-economic class)</span><span class="lid">Ibu-ibu Indonesia (kelas sosioekonomi B&ndash;C)</span></td></tr>
+    <tr><td><span class="len">Who have</span><span class="lid">Yang memiliki</span></td><td><span class="len">the desire to dress their little ones beautifully without overspending</span><span class="lid">keinginan mendandani si kecil dengan cantik tanpa menguras kantong</span></td></tr>
+    <tr><td><span class="len">Delivered through</span><span class="lid">Disampaikan melalui</span></td><td><span class="len">warm, relatable, and playful storytelling mums genuinely enjoy</span><span class="lid">storytelling yang hangat, relatable, dan playful yang benar-benar disukai para ibu</span></td></tr>
+  </tbody></table></div>
+  <h3><span class="len">Brand Voice &mdash; Always Keep This in Mind</span><span class="lid">Suara Brand &mdash; Selalu Ingat Ini</span></h3>
+  <div class="table-wrap"><table class="two-col"><tbody>
+    <tr><td><span class="len">Warm &amp; Playful</span><span class="lid">Hangat &amp; Playful</span></td><td><span class="len">Think: the favorite auntie who always has a snack in her bag.</span><span class="lid">Bayangkan: tante favorit yang selalu punya camilan di tasnya.</span></td></tr>
+    <tr><td><span class="len">Mum-First</span><span class="lid">Utamakan Ibu</span></td><td><span class="len">Speak to practical + emotional needs. Never condescending.</span><span class="lid">Bicara tentang kebutuhan praktis + emosional. Tidak pernah merendahkan.</span></td></tr>
+    <tr><td><span class="len">Real &amp; Relatable</span><span class="lid">Real &amp; Relatable</span></td><td><span class="len">Lo-fi warmth over high production. Real children, visible messiness.</span><span class="lid">Lo-fi yang hangat, bukan produksi mahal. Anak nyata, kekacauan nyata.</span></td></tr>
+    <tr><td><span class="len">Never Corporate</span><span class="lid">Jangan Korporat</span></td><td><span class="len">No formal Bahasa ("anda", "mohon maaf"). Use "kamu" for parents.</span><span class="lid">Hindari Bahasa formal ("anda", "mohon maaf"). Gunakan "kamu" untuk orang tua.</span></td></tr>
+    <tr><td>Bilingual</td><td><span class="len">English and Bahasa both valid. Never mix in one sentence. "kamu" not "anda".</span><span class="lid">Bahasa Inggris dan Indonesia sama-sama boleh. Jangan dicampur dalam satu kalimat. "kamu" bukan "anda".</span></td></tr>
+  </tbody></table></div>
+</div>
+
+<!-- S2 -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <span class="section-title"><span class="len">Our Content Approach: The Casual Pathway</span><span class="lid">Pendekatan Konten: Jalur Casual</span></span>
+  </div>
+  <p class="len">There are two ways a brand can build its social media presence. For Happy Pumpkin, we have chosen the <strong style="color:var(--hp-orange)">Casual Pathway</strong> &mdash; and this shapes everything we do.</p>
+  <p class="lid">Ada dua cara brand bisa membangun kehadiran media sosialnya. Untuk Happy Pumpkin, kami memilih <strong style="color:var(--hp-orange)">Jalur Casual</strong> &mdash; dan ini membentuk semua yang kita lakukan.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th><span class="len">PROFESSIONAL</span><span class="lid">PROFESIONAL</span></th><th><span class="len">CASUAL &#x2713; (Our Path)</span><span class="lid">CASUAL &#x2713; (Jalur Kita)</span></th></tr></thead>
+    <tbody>
+      <tr><td><span class="len">Approach</span><span class="lid">Pendekatan</span></td><td><span class="len">KOL / Influencer-led brand personality</span><span class="lid">Personalitas brand dipimpin KOL / Influencer</span></td><td><span class="len">Brand personality built from the internal team</span><span class="lid">Personalitas brand dibangun dari tim internal</span></td></tr>
+      <tr><td><span class="len">Content</span><span class="lid">Konten</span></td><td><span class="len">Product development + UGC campaigns</span><span class="lid">Pengembangan produk + kampanye UGC</span></td><td><span class="len">Winning content matched to our niche, built consistently</span><span class="lid">Winning content sesuai niche kita, dibangun secara konsisten</span></td></tr>
+      <tr><td><span class="len">Brand Voice</span><span class="lid">Suara Brand</span></td><td><span class="len">Shaped by ambassadors &amp; paid creators</span><span class="lid">Dibentuk oleh ambassador &amp; kreator berbayar</span></td><td><span class="len">Shaped by team &mdash; warm, real, relatable</span><span class="lid">Dibentuk oleh tim &mdash; hangat, real, relatable</span></td></tr>
+      <tr><td><span class="len">Key effort</span><span class="lid">Fokus Utama</span></td><td><span class="len">Campaign budget &amp; creator management</span><span class="lid">Budget kampanye &amp; manajemen kreator</span></td><td><span class="len">Story finding, research, and consistent delivery</span><span class="lid">Mencari cerita, riset, dan konsistensi delivery</span></td></tr>
+    </tbody>
+  </table></div>
+  <h3><span class="len">Why This Matters</span><span class="lid">Kenapa Ini Penting</span></h3>
+  <p class="len">Because we&rsquo;ve chosen the Casual Pathway, the quality and relatability of <strong>your stories and delivery</strong> is our primary growth lever. Our job is not just to push products &mdash; it is to find real, human moments that pull our audience in.</p>
+  <p class="lid">Karena kita memilih Jalur Casual, kualitas dan relevansi <strong>cerita serta cara kamu menyampaikannya</strong> adalah senjata utama pertumbuhan kita. Tugas kita bukan sekadar mendorong produk &mdash; tapi menemukan momen-momen nyata dan manusiawi yang menarik audiens masuk.</p>
+  <div class="callout callout-cream">
+    <div class="callout-title"><span class="len">On Creative Freedom</span><span class="lid">Tentang Kebebasan Berkreasi</span></div>
+    <p class="len">When content is over-briefed and over-restricted, it feels stiff, unnatural, and loses emotional impact. Audiences can feel this immediately &mdash; the content feels monotonous and predictable.</p>
+    <p class="lid">Ketika konten terlalu dibriefing dan terlalu dibatasi, hasilnya terasa kaku, tidak natural, dan kehilangan dampak emosionalnya. Audiens bisa merasakan ini langsung &mdash; konten terasa monoton dan mudah ditebak.</p>
+    <p class="len">You are given space to explore ideas, propose concepts, and bring your own voice &mdash; within the Happy Pumpkin brand. Love the process of making content. When you genuinely enjoy it, the output is more all-out, more confident, and more soulful.</p>
+    <p class="lid">Kamu diberi ruang untuk mengeksplorasi ide, mengajukan konsep, dan membawa suaramu sendiri &mdash; dalam batasan brand Happy Pumpkin. Cintai proses membuat konten. Ketika kamu benar-benar menikmatinya, hasilnya lebih all-out, lebih percaya diri, dan lebih berjiwa.</p>
+  </div>
+</div>
+
+<!-- S3 -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <span class="section-title"><span class="len">The Three Content Goals</span><span class="lid">Tiga Tujuan Konten</span></span>
+  </div>
+  <p class="len">Every piece of content must have a <strong>clear objective</strong>. Not every post needs to sell. Not every post needs to go viral. But every post needs to know <em>why it exists</em>.</p>
+  <p class="lid">Setiap konten harus punya <strong>tujuan yang jelas</strong>. Tidak semua post harus jualan. Tidak semua post harus viral. Tapi setiap post harus tahu <em>kenapa dia ada</em>.</p>
+  <div class="goal-grid">
+    <div class="goal-card goal-reach">
+      <div class="goal-label">Awareness</div>
+      <div class="goal-name">Reach</div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">Objective</span><span class="lid">Tujuan</span></div><div class="goal-row-val"><span class="len">Introduce brand to new audiences. Pull people into the profile.</span><span class="lid">Memperkenalkan brand ke audiens baru. Menarik orang masuk ke profil.</span></div></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">Characteristics</span><span class="lid">Ciri-ciri</span></div><div class="goal-row-val"><span class="len">Easy to understand, relatable, lightweight. Enjoyable without knowing HP.</span><span class="lid">Mudah dipahami, relatable, ringan. Bisa dinikmati tanpa mengenal HP.</span></div></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">Product role</span><span class="lid">Peran produk</span></div><div class="goal-row-val"><span class="len">Appears naturally. NOT the main focus.</span><span class="lid">Muncul secara natural. BUKAN fokus utama.</span></div></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">HP Example</span><span class="lid">Contoh HP</span></div><div class="goal-row-val">"POV: si kecil nolak pake baju baru lagi &#x1F62D;"</div></div>
+    </div>
+    <div class="goal-card goal-cons">
+      <div class="goal-label">Consideration</div>
+      <div class="goal-name"><span class="len">Educate</span><span class="lid">Edukasi</span></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">Objective</span><span class="lid">Tujuan</span></div><div class="goal-row-val"><span class="len">Build trust. Educate audience about products and brand values.</span><span class="lid">Membangun kepercayaan. Mengedukasi audiens tentang produk dan nilai brand.</span></div></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">Characteristics</span><span class="lid">Ciri-ciri</span></div><div class="goal-row-val"><span class="len">Product context, benefits, social proof, helpful info.</span><span class="lid">Konteks produk, manfaat, social proof, informasi berguna.</span></div></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">Product role</span><span class="lid">Peran produk</span></div><div class="goal-row-val"><span class="len">Featured prominently but through storytelling/context.</span><span class="lid">Ditampilkan menonjol tapi melalui storytelling/konteks.</span></div></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">HP Example</span><span class="lid">Contoh HP</span></div><div class="goal-row-val"><span class="len">"Kenapa kita pilih bahan ini untuk bayi?" &mdash; fabric close-up</span><span class="lid">"Kenapa kita pilih bahan ini untuk bayi?" &mdash; close-up kain</span></div></div>
+    </div>
+    <div class="goal-card goal-conv">
+      <div class="goal-label"><span class="len">Conversion</span><span class="lid">Konversi</span></div>
+      <div class="goal-name"><span class="len">Action</span><span class="lid">Aksi</span></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">Objective</span><span class="lid">Tujuan</span></div><div class="goal-row-val"><span class="len">Make potential customers click, buy, DM, or order.</span><span class="lid">Mendorong calon pelanggan untuk klik, beli, DM, atau order.</span></div></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">Characteristics</span><span class="lid">Ciri-ciri</span></div><div class="goal-row-val"><span class="len">Clear CTA, visible product value, more direct messaging.</span><span class="lid">CTA yang jelas, value produk terlihat, pesan yang lebih langsung.</span></div></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">Product role</span><span class="lid">Peran produk</span></div><div class="goal-row-val"><span class="len">Front and center with specific offer or CTA.</span><span class="lid">Di depan dan tengah dengan penawaran atau CTA yang spesifik.</span></div></div>
+      <div class="goal-row"><div class="goal-row-label"><span class="len">HP Example</span><span class="lid">Contoh HP</span></div><div class="goal-row-val">"Sisa 12 pcs! Free ongkir Shopee hari ini."</div></div>
+    </div>
+  </div>
+  <h3><span class="len">Suggested Content Balance (2026)</span><span class="lid">Komposisi Konten yang Disarankan (2026)</span></h3>
+  <div class="callout callout-orange">
+    <p style="text-align:center;font-weight:800;font-size:18px;letter-spacing:-.1px;"><span style="color:var(--hp-orange)">60%</span> Reach &nbsp;&middot;&nbsp; <span style="color:#B87800">30%</span> Consideration &nbsp;&middot;&nbsp; <span style="color:#3A7A72">10%</span> Conversion</p>
+    <p style="text-align:center;font-size:14px;color:var(--hp-mid);margin-top:6px"><span class="len">As brand awareness builds, shift more toward Consideration and Conversion.</span><span class="lid">Seiring brand awareness tumbuh, geser lebih banyak ke Consideration dan Conversion.</span></p>
+  </div>
+  <h3><span class="len">Brand Image Management on Instagram</span><span class="lid">Manajemen Brand Image di Instagram</span></h3>
+  <ul>
+    <li class="len"><strong>Reels</strong> &rarr; Use for Reach content. They live in the algorithm, not just your profile grid.</li>
+    <li class="lid"><strong>Reels</strong> &rarr; Gunakan untuk konten Reach. Mereka hidup di algoritma, bukan hanya di grid profil.</li>
+    <li class="len"><strong>Feed posts</strong> &rarr; Reserve for curated, on-brand aesthetic content. First-time visitors see this.</li>
+    <li class="lid"><strong>Feed post</strong> &rarr; Simpan untuk konten estetik yang sesuai brand. Pengunjung pertama kali melihat ini.</li>
+    <li class="len">This way you can chase reach <em>and</em> maintain a beautiful, trustworthy profile simultaneously.</li>
+    <li class="lid">Dengan cara ini kamu bisa mengejar reach <em>sekaligus</em> menjaga profil yang indah dan terpercaya.</li>
+  </ul>
+</div>
+
+<!-- S4 -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <span class="section-title"><span class="len">Target Audience &rarr; Content Formula</span><span class="lid">Formula Target Audiens &rarr; Konten</span></span>
+  </div>
+  <p class="len">A common mistake: thinking "target audience" means <strong>who watches the content</strong>. It doesn&rsquo;t. Target audience is the <strong>point of view (sudut pandang)</strong> of your content story &mdash; what determines whether someone feels seen.</p>
+  <p class="lid">Kesalahan umum: mengira "target audiens" berarti <strong>siapa yang menonton konten</strong>. Itu salah. Target audiens sebenarnya adalah <strong>sudut pandang</strong> dari cerita kontenmu &mdash; yang menentukan apakah seseorang merasa dilihat.</p>
+  <div class="formula-box">
+    <div class="formula-text len">Target Audience &rarr; Their Problem &rarr; Their Situation &rarr; Content</div>
+    <div class="formula-text lid">Target Audiens &rarr; Masalah Mereka &rarr; Situasi Mereka &rarr; Konten</div>
+  </div>
+  <h3><span class="len">Happy Pumpkin Worked Examples</span><span class="lid">Contoh Nyata Happy Pumpkin</span></h3>
+  <div class="table-wrap"><table class="two-col"><tbody>
+    <tr><td><span class="len">Mum + new baby</span><span class="lid">Ibu + bayi baru</span></td><td><span class="len">Overwhelmed by sizing &rarr; "How do I pick the right size?" &rarr; relatable sizing confusion content</span><span class="lid">Bingung soal ukuran &rarr; "Gimana cara pilih ukuran yang pas?" &rarr; konten kebingungan memilih ukuran yang relatable</span></td></tr>
+    <tr><td><span class="len">Mum, school year prep</span><span class="lid">Ibu, persiapan tahun ajaran</span></td><td><span class="len">Sticker shock at kids fashion prices &rarr; "Wait until you see this" value reveal</span><span class="lid">Kaget sama harga baju anak &rarr; "Tunggu sampai lihat ini" value reveal</span></td></tr>
+    <tr><td><span class="len">Mum, Lebaran planning</span><span class="lid">Ibu, persiapan Lebaran</span></td><td><span class="len">Pressure to dress si kecil perfectly &rarr; "Pilih mana ya?" &rarr; POV: trying on Lebaran sets</span><span class="lid">Tekanan mendandani si kecil sempurna &rarr; "Pilih mana ya?" &rarr; POV: coba-coba baju Lebaran</span></td></tr>
+    <tr><td><span class="len">Mum, picky toddler</span><span class="lid">Ibu, toddler susah dipakaikan</span></td><td><span class="len">"Aduh drama pagi lagi!" struggle &rarr; soft reveal of easy-on clothes</span><span class="lid">"Aduh drama pagi lagi!" &rarr; soft reveal baju yang mudah dipakai</span></td></tr>
+    <tr><td><span class="len">Gift-buying aunties</span><span class="lid">Tante yang mau beli hadiah</span></td><td><span class="len">"Mau beli apa ya?" decision paralysis &rarr; gift guide content</span><span class="lid">"Mau beli apa ya?" bingung milih &rarr; konten gift guide</span></td></tr>
+  </tbody></table></div>
+  <h3><span class="len">Fill This In Before Creating Any Content</span><span class="lid">Isi Ini Sebelum Membuat Konten Apapun</span></h3>
+  <div class="callout callout-cream">
+    <p><span class="len">My target audience for this content:</span><span class="lid">Target audiensku untuk konten ini:</span> <span style="border-bottom:1px solid var(--hp-line);display:inline-block;width:200px;margin-left:8px;">&nbsp;</span></p>
+    <p><span class="len">Their relevant problem or feeling:</span><span class="lid">Masalah atau perasaan relevan mereka:</span> <span style="border-bottom:1px solid var(--hp-line);display:inline-block;width:200px;margin-left:8px;">&nbsp;</span></p>
+    <p><span class="len">The situation / moment I&rsquo;m depicting:</span><span class="lid">Situasi / momen yang aku gambarkan:</span> <span style="border-bottom:1px solid var(--hp-line);display:inline-block;width:200px;margin-left:8px;">&nbsp;</span></p>
+    <p><span class="len">The content angle this becomes:</span><span class="lid">Angle konten yang dihasilkan:</span> <span style="border-bottom:1px solid var(--hp-line);display:inline-block;width:200px;margin-left:8px;">&nbsp;</span></p>
+    <p style="font-size:14px;color:var(--hp-mid);margin-top:10px;"><span class="len">If you can&rsquo;t fill in all four fields, the content idea is not ready yet.</span><span class="lid">Kalau kamu tidak bisa mengisi keempat kolom ini, ide konten belum siap.</span></p>
+  </div>
+</div>
+
+<!-- S5 -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <span class="section-title"><span class="len">How to Find Content Ideas</span><span class="lid">Cara Mencari Ide Konten</span></span>
+  </div>
+  <p class="len">Ideas are not found by staring at a blank screen. They are found by <strong>training your eye to observe more keenly</strong>. Creativity is not talent &mdash; it is the result of a habit of looking at the world more sharply.</p>
+  <p class="lid">Ide tidak ditemukan dengan menatap layar kosong. Ide ditemukan dengan <strong>melatih mata untuk melihat lebih tajam</strong>. Kreativitas bukan bakat &mdash; melainkan hasil dari kebiasaan melihat dunia dengan lebih peka.</p>
+  <h3><span class="len">Source 1 &mdash; Immerse in the Brand World</span><span class="lid">Sumber 1 &mdash; Terjun ke Dunia Brand</span></h3>
+  <p class="len">If you don&rsquo;t understand the daily reality of the brand, you will run out of ideas &mdash; or create content that doesn&rsquo;t feel real. Make a habit of:</p>
+  <p class="lid">Kalau kamu tidak memahami realitas sehari-hari brand, kamu akan kehabisan ide &mdash; atau membuat konten yang tidak terasa nyata. Biasakan untuk:</p>
+  <ul>
+    <li class="len">Helping with order packing and fulfillment</li><li class="lid">Membantu packing dan pemenuhan pesanan</li>
+    <li class="len">Spending time in the production area</li><li class="lid">Menghabiskan waktu di area produksi</li>
+    <li class="len">Reading and responding to customer messages and reviews</li><li class="lid">Membaca dan membalas pesan dan ulasan pelanggan</li>
+    <li class="len">Visiting offline stockists and observing how customers shop</li><li class="lid">Mengunjungi toko offline dan mengamati cara pelanggan berbelanja</li>
+  </ul>
+  <div class="callout callout-sage">
+    <p class="len">When you&rsquo;re close to the brand world, you discover <strong>customer problems, small daily habits, and tiny relatable moments</strong>. These are the raw material for your best content. You&rsquo;ll never run out of ideas.</p>
+    <p class="lid">Ketika kamu dekat dengan dunia brand, kamu akan menemukan <strong>masalah pelanggan, kebiasaan sehari-hari, dan momen-momen kecil yang relatable</strong>. Inilah bahan baku konten terbaikmu. Kamu tidak akan pernah kehabisan ide.</p>
+  </div>
+  <h3><span class="len">Source 2 &mdash; Scroll with "Cari Celah" Eyes</span><span class="lid">Sumber 2 &mdash; Scroll dengan Kacamata "Cari Celah"</span></h3>
+  <p class="len">When you scroll TikTok and Instagram, you are <em>not</em> scrolling for entertainment. You are <strong>analysing</strong>. Put on your researcher glasses every time you open the app.</p>
+  <p class="lid">Saat kamu scroll TikTok dan Instagram, bukan untuk hiburan. Kamu sedang <strong>menganalisa</strong>. Pakai kacamata peneliti setiap kali kamu buka aplikasi.</p>
+  <div class="table-wrap"><table class="two-col"><tbody>
+    <tr><td>&#x274C; <span class="len">Don't do this</span><span class="lid">Jangan lakukan ini</span></td><td><span class="len">Just watch and copy the format &mdash; content feels "mirip" (copycat) without understanding why it worked.</span><span class="lid">Hanya menonton lalu langsung copy format &mdash; konten terasa "mirip" tanpa memahami kenapa berhasil.</span></td></tr>
+    <tr><td>&#x2705; <span class="len">Do this instead</span><span class="lid">Lakukan ini sebagai gantinya</span></td><td><span class="len">Watch, then ask: <em>WHY</em> did this work? What hook? What emotion? Who felt seen? What angle? How delivered?</span><span class="lid">Tonton, lalu tanya: <em>KENAPA</em> ini berhasil? Hook apa? Emosi apa? Siapa yang merasa dilihat? Angle apa? Bagaimana menyampaikannya?</span></td></tr>
+  </tbody></table></div>
+  <h3><span class="len">The 5 Analysis Questions for Any Viral Content</span><span class="lid">5 Pertanyaan Analisis untuk Konten Viral</span></h3>
+  <ul>
+    <li class="len">Why does this content work? What makes it compelling?</li><li class="lid">Kenapa konten ini berhasil? Apa yang membuatnya menarik?</li>
+    <li class="len">What hook is being used in the first 1&ndash;2 seconds?</li><li class="lid">Hook apa yang digunakan di 1&ndash;2 detik pertama?</li>
+    <li class="len">What emotion does it trigger? (funny, relatable, surprising, touching)</li><li class="lid">Emosi apa yang dipancing? (lucu, relatable, mengejutkan, menyentuh)</li>
+    <li class="len">Who feels "seen" by this? Who is the implied audience?</li><li class="lid">Siapa yang merasa "dilihat"? Siapa target implisitnya?</li>
+    <li class="len">What is the angle/entry point? And how is it delivered?</li><li class="lid">Apa angle/sudut masuknya? Dan bagaimana cara menyampaikannya?</li>
+  </ul>
+  <p class="len">Only after answering these should you ask: <strong><em>How can I adapt this &mdash; not copy it &mdash; for Happy Pumpkin&rsquo;s audience?</em></strong></p>
+  <p class="lid">Hanya setelah menjawab pertanyaan-pertanyaan ini, baru tanya: <strong><em>Bagaimana cara mengadaptasi ini &mdash; bukan menyalin &mdash; untuk audiens Happy Pumpkin?</em></strong></p>
+  <h3><span class="len">Source 3 &mdash; International Creator References</span><span class="lid">Sumber 3 &mdash; Referensi Kreator Luar Negeri</span></h3>
+  <p class="len">Indonesian content trends often follow international trends by weeks or months. By tracking international creators, you can:</p>
+  <p class="lid">Tren konten Indonesia sering mengikuti tren internasional beberapa minggu atau bulan setelahnya. Dengan memantau kreator internasional, kamu bisa:</p>
+  <ul>
+    <li class="len">Identify formats and trends <strong>before</strong> they hit Indonesia &mdash; be one step ahead</li><li class="lid">Mengidentifikasi format dan tren <strong>sebelum</strong> masuk ke Indonesia &mdash; selangkah lebih maju</li>
+    <li class="len">Find fresher, more out-of-the-box ideas to adapt locally</li><li class="lid">Menemukan ide yang lebih segar dan out-of-the-box untuk diadaptasi secara lokal</li>
+    <li class="len">Use their content as "early inspiration" &mdash; a blueprint, not a copy</li><li class="lid">Menggunakan konten mereka sebagai "early inspiration" &mdash; cetak biru, bukan salinan</li>
+  </ul>
+</div>
+
+<!-- S6 -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <span class="section-title"><span class="len">How to Build a Strong Hook</span><span class="lid">Cara Membuat Hook yang Kuat</span></span>
+  </div>
+  <p class="len">The <strong>hook</strong> is the first 1&ndash;2 seconds of your content. It is the only thing that determines whether someone stops scrolling or keeps going. Everything else is secondary.</p>
+  <p class="lid"><strong>Hook</strong> adalah 1&ndash;2 detik pertama kontenmu. Ini satu-satunya hal yang menentukan apakah seseorang berhenti scroll atau terus. Semua hal lainnya adalah nomor dua.</p>
+  <div class="formula-box">
+    <div class="formula-text len">"Why should someone stop scrolling at THIS video, right now?"</div>
+    <div class="formula-text lid">"Kenapa orang harus berhenti di video INI, sekarang juga?"</div>
+    <p style="color:rgba(255,255,255,.78);font-size:14px;margin-top:10px;"><span class="len">If you don&rsquo;t have a clear answer, the hook is not strong enough. Go back and sharpen it.</span><span class="lid">Kalau kamu tidak punya jawaban yang jelas, hook belum cukup kuat. Kembali dan perbaiki.</span></p>
+  </div>
+  <h3><span class="len">The 4 Hook Types</span><span class="lid">4 Jenis Hook</span></h3>
+  <div class="table-wrap"><table class="two-col"><tbody>
+    <tr><td><span class="len">Something unusual</span><span class="lid">Sesuatu yang tidak biasa</span></td><td><span class="len">A visual or opening that surprises people. Unexpected setting, action, or visual contrast. Makes people stop because they&rsquo;ve never seen it.</span><span class="lid">Visual atau pembuka yang mengejutkan. Setting, aksi, atau kontras visual yang tidak terduga. Membuat orang berhenti karena belum pernah melihatnya.</span></td></tr>
+    <tr><td><span class="len">A curious statement</span><span class="lid">Pernyataan yang bikin penasaran</span></td><td><span class="len">Something that makes people think "hah? apa maksudnya?" &mdash; they must watch to understand. Creates an information gap.</span><span class="lid">Sesuatu yang membuat orang berpikir "hah? apa maksudnya?" &mdash; mereka harus nonton untuk memahami. Menciptakan celah informasi.</span></td></tr>
+    <tr><td><span class="len">A relatable situation</span><span class="lid">Situasi yang langsung relatable</span></td><td><span class="len">POV or everyday moment that makes the audience immediately think "eh, itu gue banget". They stay because they see themselves.</span><span class="lid">POV atau momen sehari-hari yang membuat audiens langsung berpikir "eh, itu gue banget". Mereka bertahan karena melihat diri mereka sendiri.</span></td></tr>
+    <tr><td><span class="len">An immediate emotion</span><span class="lid">Emosi yang langsung kerasa</span></td><td><span class="len">Content that triggers a feeling in the first second &mdash; funny, surprised, annoyed, or touching. The emotion is the stop reason.</span><span class="lid">Konten yang memancing perasaan di detik pertama &mdash; lucu, kaget, kesel, atau menyentuh. Emosinya sendiri adalah alasan untuk berhenti.</span></td></tr>
+  </tbody></table></div>
+  <h3><span class="len">HP Hook Examples</span><span class="lid">Contoh Hook Happy Pumpkin</span></h3>
+  <div class="table-wrap"><table class="two-col"><tbody>
+    <tr><td><span class="len">Unusual visual</span><span class="lid">Visual tidak biasa</span></td><td><span class="len">"POV: a 3-year-old picks their own Lebaran outfit" &mdash; unexpected situation, immediate curiosity</span><span class="lid">"POV: si kecil umur 3 tahun milih baju Lebaran sendiri" &mdash; situasi tak terduga, rasa ingin tahu seketika</span></td></tr>
+    <tr><td><span class="len">Curious statement</span><span class="lid">Pernyataan penasaran</span></td><td>"Ini kenapa harga bajunya lebih mahal dari kopi lo..." &mdash; <span class="len">information gap</span><span class="lid">celah informasi</span></td></tr>
+    <tr><td><span class="len">Relatable situation</span><span class="lid">Situasi relatable</span></td><td>"Ketika si kecil nolak pake baju apapun pagi-pagi" &mdash; <span class="len">every mum instantly recognises this</span><span class="lid">setiap ibu langsung mengenali ini</span></td></tr>
+    <tr><td><span class="len">Immediate emotion</span><span class="lid">Emosi langsung</span></td><td><span class="len">Baby giggling uncontrollably while being dressed &mdash; pure joy in the first second</span><span class="lid">Bayi ketawa tak berhenti saat dipakaikan baju &mdash; sukacita murni di detik pertama</span></td></tr>
+  </tbody></table></div>
+  <h3><span class="len">Hook Reminders</span><span class="lid">Pengingat Soal Hook</span></h3>
+  <ul>
+    <li class="len">The hook does <em>not</em> have to be loud or dramatic. It just needs a <strong>clear reason to stop</strong>.</li><li class="lid">Hook tidak harus heboh atau dramatis. Asalkan ada <strong>alasan yang jelas untuk berhenti</strong>.</li>
+    <li class="len">Text overlays in the first frame can act as a hook &mdash; make them earn attention.</li><li class="lid">Teks overlay di frame pertama bisa menjadi hook &mdash; pastikan mereka layak mendapat perhatian.</li>
+    <li class="len">A face showing strong emotion in the thumbnail is one of the most reliable hooks.</li><li class="lid">Ekspresi wajah dengan emosi kuat di thumbnail adalah salah satu hook paling andal.</li>
+    <li class="len">For parenting content: fastest hook = mum problem stated instantly. <em>("POV: si kecil nolak pake baju lagi")</em></li><li class="lid">Untuk konten parenting: hook tercepat = masalah ibu yang langsung diungkapkan. <em>("POV: si kecil nolak pake baju lagi")</em></li>
+  </ul>
+</div>
+
+<!-- S7 -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <span class="section-title"><span class="len">The Content Success Formula</span><span class="lid">Formula Sukses Konten</span></span>
+  </div>
+  <p class="len">One million people can have the same content idea and get completely different results. This is because <strong>ideas are only 50% of success</strong>. The other 50% comes from how you deliver it and who is doing it.</p>
+  <p class="lid">Satu juta orang bisa punya ide konten yang sama dan mendapat hasil yang benar-benar berbeda. Ini karena <strong>ide hanya 50% dari keberhasilan</strong>. 50% lainnya berasal dari cara kamu menyampaikannya dan siapa yang melakukannya.</p>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span class="len">IDE &mdash; What you say (50%)</span><span class="lid">IDE &mdash; Apa yang kamu katakan (50%)</span></th>
+      <th><span class="len">DELIVERY &mdash; How you say it (30%)</span><span class="lid">DELIVERY &mdash; Cara kamu mengatakannya (30%)</span></th>
+      <th><span class="len">PERSONA &mdash; Who you are (20%)</span><span class="lid">PERSONA &mdash; Siapa kamu (20%)</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><span class="len">The angle, topic, and concept of the content.</span><span class="lid">Angle, topik, dan konsep konten.</span></td><td><span class="len">Tone of voice, energy, acting, pacing, editing style.</span><span class="lid">Nada bicara, energi, akting, tempo, gaya editing.</span></td><td><span class="len">The character and personality behind the account.</span><span class="lid">Karakter dan kepribadian di balik akun.</span></td></tr>
+      <tr><td><span class="len">Even a great idea will underperform with weak delivery.</span><span class="lid">Bahkan ide bagus pun akan underperform dengan delivery yang lemah.</span></td><td><span class="len">Same idea, different delivery = completely different results.</span><span class="lid">Ide sama, delivery berbeda = hasil yang benar-benar berbeda.</span></td><td><span class="len">Audiences remember the character behind the content, not just the content itself.</span><span class="lid">Audiens mengingat karakter di balik konten, bukan hanya kontennya saja.</span></td></tr>
+      <tr><td><span class="len">Research, trend awareness, and audience insight improve this.</span><span class="lid">Riset, kepekaan terhadap tren, dan pemahaman audiens meningkatkan ini.</span></td><td><span class="len">Builds through practice, feedback, and studying performance data.</span><span class="lid">Dibangun melalui latihan, feedback, dan mempelajari data performa.</span></td><td><span class="len">Developed through the Persona Formula below.</span><span class="lid">Dikembangkan melalui Formula Persona di bawah.</span></td></tr>
+    </tbody>
+  </table></div>
+  <h3><span class="len">The Happy Pumpkin Persona Formula</span><span class="lid">Formula Persona Happy Pumpkin</span></h3>
+  <div class="table-wrap"><table class="two-col"><tbody>
+    <tr><td><span class="len">1. IDENTIFY</span><span class="lid">1. IDENTIFIKASI</span></td><td><span class="len">Find the strongest traits to show. For HP: warm, playful, a little cheeky. The favorite auntie. Never corporate. Always real.</span><span class="lid">Temukan sifat-sifat terkuat untuk ditampilkan. Untuk HP: hangat, playful, sedikit nakal. Tante favorit. Tidak pernah korporat. Selalu nyata.</span></td></tr>
+    <tr><td><span class="len">2. CONSISTENCY</span><span class="lid">2. KONSISTENSI</span></td><td><span class="len">Repeat the same energy, tone, and character across every post until it sticks in the audience&rsquo;s mind.</span><span class="lid">Ulangi energi, nada, dan karakter yang sama di setiap konten sampai melekat di benak audiens.</span></td></tr>
+    <tr><td><span class="len">3. AMPLIFY</span><span class="lid">3. AMPLIFIKASI</span></td><td><span class="len">Be a slightly amplified version of the brand. If HP is warm and playful, push that visibly. Don&rsquo;t be flat. Be the clearer version.</span><span class="lid">Jadilah versi yang sedikit lebih menonjol dari brand. Jika HP hangat dan playful, tunjukkan itu dengan jelas. Jangan datar. Jadilah versi yang lebih jelas.</span></td></tr>
+  </tbody></table></div>
+  <h3><span class="len">Our HP Brand Personality in Content</span><span class="lid">Kepribadian Brand HP dalam Konten</span></h3>
+  <div class="callout callout-cream">
+    <p><strong><span class="len">Voice:</span><span class="lid">Suara:</span></strong> <span class="len">Conversational, mum-to-mum. Like texting a friend who knows kids&rsquo; clothes.</span><span class="lid">Percakapan antar sesama ibu. Seperti chat dengan teman yang paham pakaian anak.</span></p>
+    <p><strong><span class="len">Energy:</span><span class="lid">Energi:</span></strong> <span class="len">Warm, lively, occasionally funny &mdash; never stiff or salesy.</span><span class="lid">Hangat, hidup, kadang lucu &mdash; tidak pernah kaku atau terlalu sales-y.</span></p>
+    <p><strong><span class="len">Character:</span><span class="lid">Karakter:</span></strong> <span class="len">Like an older sister or cool auntie &mdash; she gets mum life and has great taste on a real budget.</span><span class="lid">Seperti kakak perempuan atau tante kece &mdash; dia mengerti kehidupan ibu dan punya selera yang bagus dengan budget nyata.</span></p>
+    <p><strong><span class="len">Visual/Audio:</span><span class="lid">Visual/Audio:</span></strong> <span class="len">Warm daylight, slight overexposure, real homes, real children. Not studio-cool. Trending audio. Lo-fi warmth over high production.</span><span class="lid">Cahaya siang yang hangat, sedikit overexposure, rumah nyata, anak nyata. Bukan suasana studio. Audio trending. Kehangatan lo-fi di atas produksi mahal.</span></p>
+  </div>
+
+  <h3><span class="len">Instagram 2026 Update — What This Means for Delivery</span><span class="lid">Update Instagram 2026 — Dampaknya pada Delivery</span></h3>
+  <div class="ig-update-badge">&#x1F4F8; Instagram 2026</div>
+  <div class="callout callout-ig">
+    <div class="callout-title"><span class="len">Raw Content Is Now Algorithmically Rewarded</span><span class="lid">Konten Raw Kini Dapat Reward dari Algoritma</span></div>
+    <p class="len">Instagram CEO Adam Mosseri confirmed in 2026: <strong>raw, real human content</strong> is being prioritised over polished, AI-generated, and over-produced material. Behind-the-scenes clips, talking-head videos, and imperfect genuine moments are outperforming high-production studio posts &mdash; not just with audiences, but in algorithmic distribution.</p>
+    <p class="lid">CEO Instagram Adam Mosseri mengkonfirmasi di 2026: <strong>konten raw dan manusiawi</strong> kini diprioritaskan di atas konten polished, AI-generated, dan over-produced. Klip behind-the-scenes, video talking-head, dan momen nyata yang tidak sempurna kini mengungguli postingan studio produksi tinggi &mdash; bukan hanya di mata audiens, tapi juga dalam distribusi algoritmik.</p>
+    <p class="len"><strong>What this confirms for HP:</strong> Our Casual Pathway and lo-fi warmth approach is not just a brand choice &mdash; it is exactly what the platform now rewards. Stay real. Resist the urge to over-polish.</p>
+    <p class="lid"><strong>Apa artinya bagi HP:</strong> Pendekatan Casual Pathway dan kehangatan lo-fi kita bukan sekadar pilihan brand &mdash; ini tepat seperti yang kini diapresiasi platform. Tetap nyata. Tahan dorongan untuk terlalu dipoles.</p>
+    <p class="len" style="font-size:13.5px;color:var(--ink-3);margin-top:8px;"><strong>New delivery question to ask before every Reel:</strong> "Would someone DM this to a friend?" — DM shares are now the #1 distribution signal on Instagram, worth 3&ndash;5× more than likes.</p>
+    <p class="lid" style="font-size:13.5px;color:var(--ink-3);margin-top:8px;"><strong>Pertanyaan delivery baru sebelum setiap Reel:</strong> "Apakah seseorang akan DM-kan ini ke temannya?" — DM share kini menjadi sinyal distribusi #1 di Instagram, bernilai 3&ndash;5× lebih dari likes.</p>
+  </div>
+</div>
+
+<!-- S8 -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <span class="section-title"><span class="len">How to Read Content Performance</span><span class="lid">Cara Membaca Performa Konten</span></span>
+  </div>
+  <p class="len">Every number is a human. Our job is to read what each number is telling us &mdash; and fix the right thing. Don&rsquo;t blame the algorithm. The algorithm is a mirror of how real people responded.</p>
+  <p class="lid">Setiap angka adalah manusia. Tugas kita adalah membaca apa yang diceritakan setiap angka &mdash; dan memperbaiki hal yang tepat. Jangan menyalahkan algoritma. Algoritma adalah cermin dari cara orang nyata merespons.</p>
+
+  <h3><span class="len">Step 0 — Beat the Skip Rate Gate</span><span class="lid">Langkah 0 — Lolos dari Filter Skip Rate</span></h3>
+  <div class="callout" style="background:#FFF8F0;border:1.5px solid #FFA94D;border-radius:14px;padding:18px 20px;margin-bottom:20px;">
+    <div class="callout-title" style="color:#E8590C;">&#x26A0;&#xFE0F;&nbsp;<span class="len">Skip Rate is the Distribution Gate — not an engagement signal</span><span class="lid">Skip Rate adalah Gerbang Distribusi — bukan sinyal keterlibatan</span></div>
+    <p class="len">Instagram's native <em>What Impacts Your Views</em> tool lists <strong>Skip Rate</strong> as the first filter — before any engagement signal matters. If more than 50% of viewers skip your Reel in the first 1–2 seconds, Instagram suppresses distribution regardless of saves or DM shares earned later. Beat this gate first, then optimise for the signals below.</p>
+    <p class="lid">Alat native Instagram <em>What Impacts Your Views</em> menempatkan <strong>Skip Rate</strong> sebagai filter pertama — sebelum sinyal keterlibatan apapun menjadi penting. Jika lebih dari 50% penonton melewati Reel-mu dalam 1–2 detik pertama, Instagram menekan distribusi terlepas dari saves atau DM shares yang didapat setelahnya. Lolos dari gerbang ini dulu, baru optimisasi sinyal di bawah.</p>
+    <div class="trial-reel-grid" style="margin-top:14px;">
+      <div class="trial-step">
+        <div class="trial-step-num" style="background:#FFF0E8;color:#E8590C;font-size:15px;">&#x2713;</div>
+        <div class="trial-step-body"><strong><span class="len">30–40% skip rate</span><span class="lid">Skip rate 30–40%</span></strong><br><span class="len" style="font-size:13px;color:var(--ink-3);">Healthy. Some skipping is normal — not everyone is your audience.</span><span class="lid" style="font-size:13px;color:var(--ink-3);">Sehat. Sedikit skipping itu normal — tidak semua orang adalah audiens kamu.</span></div>
+      </div>
+      <div class="trial-step">
+        <div class="trial-step-num" style="background:#FFEAEA;color:#E03131;font-size:15px;">!</div>
+        <div class="trial-step-body"><strong><span class="len">&gt;50% skip rate</span><span class="lid">Skip rate &gt;50%</span></strong><br><span class="len" style="font-size:13px;color:var(--ink-3);">Hook failed. Distribution suppressed. Rework the first frame before boosting anything else.</span><span class="lid" style="font-size:13px;color:var(--ink-3);">Hook gagal. Distribusi ditekan. Rework frame pertama sebelum mengoptimalkan hal lain.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ig-update-badge">&#x1F4F8; Instagram 2026 — Engagement Signal Hierarchy</div>
+  <p class="len" style="font-size:14px;color:var(--ink-3);margin-bottom:14px;">Once you've cleared the Skip Rate gate, these signals determine how far Instagram distributes your Reel. Order reflects Instagram's native <em>What Impacts Your Views</em> tool — with DM shares carrying 3–5× the weight of any other signal.</p>
+  <p class="lid" style="font-size:14px;color:var(--ink-3);margin-bottom:14px;">Setelah lolos dari filter Skip Rate, sinyal-sinyal ini menentukan seberapa jauh Instagram mendistribusikan Reel-mu. Urutan mencerminkan alat native Instagram <em>What Impacts Your Views</em> — dengan DM shares membawa bobot 3–5× lebih besar dari sinyal lainnya.</p>
+
+  <div class="metric-grid-6">
+    <div class="metric-card">
+      <div class="metric-icon">&#x1F4E4;</div>
+      <span class="metric-rank rank-1">#1 Highest</span>
+      <div class="metric-name"><span class="len">DM Shares</span><span class="lid">Kirim via DM</span></div>
+      <div class="metric-diag"><span class="len">3&ndash;5&times; more powerful than any other signal. The strongest reach accelerator. Ask: would someone DM this to a friend?</span><span class="lid">3&ndash;5&times; lebih kuat dari sinyal lain manapun. Akselerator reach terkuat. Tanya: akankah seseorang DM-kan ini ke temannya?</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">&#x2764;&#xFE0F;</div>
+      <span class="metric-rank rank-1">#2 High</span>
+      <div class="metric-name"><span class="len">Likes &#x2191;</span><span class="lid">Likes &#x2191;</span></div>
+      <div class="metric-diag"><span class="len">Instagram's own <em>What Impacts Your Views</em> tool ranks Likes above Saves. Signals immediate emotional resonance in the first viewing.</span><span class="lid">Alat native Instagram <em>What Impacts Your Views</em> menempatkan Likes di atas Saves. Menandakan resonansi emosional langsung saat pertama menonton.</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">&#x1F516;</div>
+      <span class="metric-rank rank-2">#3 High</span>
+      <div class="metric-name">Saves</div>
+      <div class="metric-diag"><span class="len">Content worth keeping = content worth distributing. Add value, tips, and reference-worthy information.</span><span class="lid">Konten layak disimpan = konten layak didistribusikan. Tambahkan nilai, tips, dan informasi yang layak dijadikan referensi.</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">&#x1F501;</div>
+      <span class="metric-rank rank-2">#4 Medium</span>
+      <div class="metric-name"><span class="len">Reposts</span><span class="lid">Repost</span></div>
+      <div class="metric-diag"><span class="len">Reshared to Stories or Feed by others. Extends reach organically. Strengthen the "send to a friend" quality of the content.</span><span class="lid">Dibagikan ulang ke Story atau Feed oleh orang lain. Memperluas jangkauan secara organik. Perkuat kualitas "kirim ke teman" dari konten.</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">&#x1F4AC;</div>
+      <span class="metric-rank rank-2">#5 Medium</span>
+      <div class="metric-name"><span class="len">Comments</span><span class="lid">Komentar</span></div>
+      <div class="metric-diag"><span class="len">Not provoking opinion or emotion. Add a bolder angle, ask a question, or plant a discussion hook in the caption.</span><span class="lid">Tidak memancing opini atau emosi. Tambahkan angle yang lebih berani, ajukan pertanyaan, atau tanam hook diskusi di caption.</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">&#x23F1;&#xFE0F;</div>
+      <span class="metric-rank rank-low">Retention</span>
+      <div class="metric-name"><span class="len">Watch Completion</span><span class="lid">Kelengkapan Tonton</span></div>
+      <div class="metric-diag"><span class="len">Tied to Skip Rate — the longer people watch, the stronger the distribution signal. Read the Retention Chart in Insights for second-by-second detail.</span><span class="lid">Terkait Skip Rate — semakin lama orang menonton, semakin kuat sinyal distribusi. Baca Retention Chart di Insights untuk detail per detik.</span></div>
+    </div>
+  </div>
+
+  <div class="callout callout-ig">
+    <div class="callout-title"><span class="len">2026 Pattern Diagnosis</span><span class="lid">Diagnosa Pola 2026</span></div>
+    <p class="len"><strong>High reach + low DM shares</strong> &rarr; Hook works, content doesn&rsquo;t move people. Sharpen emotional payoff or "send to a friend" moment.</p>
+    <p class="lid"><strong>Reach tinggi + DM shares rendah</strong> &rarr; Hook bekerja, konten tidak menggerakkan orang. Perkuat emosional payoff atau momen "kirim ke teman".</p>
+    <p class="len"><strong>High saves + low DM shares</strong> &rarr; Valuable info, not emotional enough. Make it more personal and relatable.</p>
+    <p class="lid"><strong>Saves tinggi + DM shares rendah</strong> &rarr; Info bernilai, kurang emosional. Buat lebih personal dan relatable.</p>
+    <p class="len"><strong>High comments + low reach</strong> &rarr; Great content, bad hook. Repurpose with a stronger first 2 seconds.</p>
+    <p class="lid"><strong>Komentar tinggi + reach rendah</strong> &rarr; Konten bagus, hook buruk. Gunakan ulang dengan 2 detik pertama yang lebih kuat.</p>
+    <p class="len"><strong>Good follower reach + poor unconnected reach</strong> &rarr; Content resonates with warm audience but won&rsquo;t travel to strangers. Make it less product-forward and more universal.</p>
+    <p class="lid"><strong>Reach follower bagus + reach tak terhubung buruk</strong> &rarr; Konten beresonansi dengan audiens hangat tapi tidak menyebar ke orang asing. Buat lebih universal, kurangi fokus pada produk.</p>
+  </div>
+
+  <h3><span class="len">Reading the Advanced Charts in Instagram Insights</span><span class="lid">Membaca Chart Lanjutan di Instagram Insights</span></h3>
+  <div class="ig-update-badge" style="margin-bottom:14px;">&#x1F4F8; Available in Instagram Insights &mdash; Use These Every Week</div>
+  <div class="trial-reel-grid" style="grid-template-columns:1fr 1fr;margin-bottom:20px;">
+    <div class="s12-card" style="margin:0;">
+      <div class="s12-card-title">&#x1F4C9;&nbsp;<span class="len">Retention Chart</span><span class="lid">Retention Chart</span></div>
+      <p class="len" style="font-size:13.5px;margin:0;">Second-by-second viewer drop-off graph. <strong>Sharp drop at 1–2s</strong> = hook failed. <strong>Gradual decline</strong> = normal. <strong>Flat line or spike</strong> at a specific moment = strong delivery peak or replay trigger. Find those moments and build future content around them.</p>
+      <p class="lid" style="font-size:13.5px;margin:0;">Grafik penurunan penonton per detik. <strong>Drop tajam di 1–2 detik</strong> = hook gagal. <strong>Penurunan bertahap</strong> = normal. <strong>Garis datar atau lonjakan</strong> di momen tertentu = puncak delivery kuat atau pemicu tayang ulang. Temukan momen itu dan bangun konten mendatang di sekitarnya.</p>
+    </div>
+    <div class="s12-card" style="margin:0;">
+      <div class="s12-card-title">&#x2764;&#xFE0F;&nbsp;<span class="len">Like Timing Chart</span><span class="lid">Like Timing Chart</span></div>
+      <p class="len" style="font-size:13.5px;margin:0;">Shows <em>when</em> during playback viewers tapped like. <strong>Spikes at 1–3s</strong> = strong visual hook. <strong>Spikes mid-video</strong> = value delivery or storytelling is landing. <strong>Spikes at the end</strong> = full watch completion + satisfaction. Likes clustered only at the start = your ending needs work.</p>
+      <p class="lid" style="font-size:13.5px;margin:0;">Menunjukkan <em>kapan</em> penonton menekan like selama pemutaran. <strong>Lonjakan di 1–3 detik</strong> = hook visual kuat. <strong>Lonjakan di tengah video</strong> = value delivery atau storytelling berhasil. <strong>Lonjakan di akhir</strong> = penyelesaian penuh + kepuasan. Likes hanya di awal = ending perlu diperbaiki.</p>
+    </div>
+    <div class="s12-card" style="margin:0;">
+      <div class="s12-card-title">&#x1F4CA;&nbsp;<span class="len">Actions After Viewing</span><span class="lid">Tindakan Setelah Menonton</span></div>
+      <p class="len" style="font-size:13.5px;margin:0;"><strong>Follows</strong> = strongest growth quality signal — content earned a permanent audience member. <strong>Profile visits</strong> = audience curiosity, they want more. <strong>Link taps</strong> = purchase or conversion intent. Pattern to watch: high views + low follows = content entertains but doesn&rsquo;t build loyalty. Fix the middle and end to earn the follow.</p>
+      <p class="lid" style="font-size:13.5px;margin:0;"><strong>Follows</strong> = sinyal kualitas pertumbuhan terkuat — konten berhasil mendapat anggota audiens permanen. <strong>Kunjungan profil</strong> = rasa ingin tahu audiens, mereka mau lebih. <strong>Ketukan tautan</strong> = niat pembelian atau konversi. Pola yang perlu diperhatikan: views tinggi + follows rendah = konten menghibur tapi tidak membangun loyalitas. Perbaiki bagian tengah dan akhir untuk mendapat follow.</p>
+    </div>
+    <div class="s12-card" style="margin:0;">
+      <div class="s12-card-title">&#x1F4CD;&nbsp;<span class="len">Top Sources of Views</span><span class="lid">Sumber Views Teratas</span></div>
+      <p class="len" style="font-size:13.5px;margin:0;"><strong>Reels tab</strong> = algorithm pushing to new audiences — this is reach growth. <strong>Feed</strong> = reaching existing followers. <strong>Explore</strong> = secondary discovery. <strong>Profile</strong> = direct viewers already interested. <strong>Search</strong> = topic-driven — optimise caption keywords. Low Reels tab % = content not resonating with non-followers; try a stronger universal hook.</p>
+      <p class="lid" style="font-size:13.5px;margin:0;"><strong>Tab Reels</strong> = algoritma mendorong ke audiens baru — ini pertumbuhan reach. <strong>Feed</strong> = menjangkau followers yang ada. <strong>Explore</strong> = penemuan sekunder. <strong>Profil</strong> = penonton langsung yang sudah tertarik. <strong>Pencarian</strong> = berbasis topik — optimalkan kata kunci caption. % Tab Reels rendah = konten tidak beresonansi dengan non-followers; coba hook universal yang lebih kuat.</p>
+    </div>
+  </div>
+
+  <h3><span class="len">The Diagnosis Habit</span><span class="lid">Kebiasaan Diagnosa</span></h3>
+  <ul>
+    <li class="len">Check <strong>Skip Rate first</strong> (24–48 hours) &mdash; if it's above 50%, the hook failed and distribution is already suppressed. Fix before anything else.</li><li class="lid">Cek <strong>Skip Rate terlebih dahulu</strong> (24–48 jam) &mdash; jika di atas 50%, hook gagal dan distribusi sudah ditekan. Perbaiki sebelum hal lain.</li>
+    <li class="len">Then check DM shares and watch completion &mdash; the two strongest distribution accelerators after the gate is cleared.</li><li class="lid">Kemudian cek DM shares dan watch completion &mdash; dua akselerator distribusi terkuat setelah gerbang dibersihkan.</li>
+    <li class="len">Open the <strong>Retention Chart</strong> &mdash; find the exact second where viewers drop off or replay. That's your edit note for the next version.</li><li class="lid">Buka <strong>Retention Chart</strong> &mdash; temukan detik tepat di mana penonton drop atau menonton ulang. Itu catatan edit untuk versi berikutnya.</li>
+    <li class="len">Check <strong>Actions After Viewing</strong> &mdash; if views are strong but follows are near zero, your middle and end aren&rsquo;t converting curiosity into loyalty.</li><li class="lid">Cek <strong>Actions After Viewing</strong> &mdash; jika views kuat tapi follows mendekati nol, bagian tengah dan akhir belum mengonversi rasa penasaran menjadi loyalitas.</li>
+    <li class="len">Check <strong>Top Sources of Views</strong> &mdash; a healthy Reels tab % means the algorithm is pushing your content beyond followers. Low Reels tab = hook isn&rsquo;t cold-audience-ready.</li><li class="lid">Cek <strong>Top Sources of Views</strong> &mdash; % Tab Reels yang sehat berarti algoritma mendorong konten melampaui followers. Tab Reels rendah = hook belum siap untuk cold audience.</li>
+    <li class="len">Read comments &mdash; free research into your audience&rsquo;s mind. Comments also reveal why people shared or didn&rsquo;t share.</li><li class="lid">Baca komentar &mdash; riset gratis ke pikiran audiensimu. Komentar juga mengungkap kenapa orang membagikan atau tidak.</li>
+    <li class="len">Look for patterns across your last 5&ndash;10 posts &mdash; those patterns are your learning and your content playbook.</li><li class="lid">Cari pola dari 5&ndash;10 post terakhirmu &mdash; pola itu adalah pembelajaran dan playbook kontenmu.</li>
+  </ul>
+</div>
+
+<!-- S9 -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <span class="section-num">09</span>
+    <span class="section-title"><span class="len">Content Evaluation Process</span><span class="lid">Proses Evaluasi Konten</span></span>
+  </div>
+  <p class="len">Content evaluation is not a one-time task. It is an <strong>ongoing habit</strong> that compounds over time. The more consistently you evaluate, the faster you improve.</p>
+  <p class="lid">Evaluasi konten bukan tugas satu kali. Ini adalah <strong>kebiasaan berkelanjutan</strong> yang berkembang seiring waktu. Semakin konsisten kamu mengevaluasi, semakin cepat kamu berkembang.</p>
+  <div class="table-wrap"><table class="two-col"><tbody>
+    <tr><td><span class="len">STEP 1<br>Compare</span><span class="lid">LANGKAH 1<br>Bandingkan</span></td><td><span class="len">Every week, compare your top-performing and lowest-performing content side by side. Sort by DM shares and watch completion &mdash; not likes &mdash; to rank true performance in 2026.</span><span class="lid">Setiap minggu, bandingkan konten terbaik dan terburuk secara berdampingan. Urutkan berdasarkan DM shares dan watch completion &mdash; bukan likes &mdash; untuk mengukur performa sesungguhnya di 2026.</span></td></tr>
+    <tr><td><span class="len">STEP 2<br>Dissect</span><span class="lid">LANGKAH 2<br>Bedah</span></td><td><span class="len">Break down: (1) Hook &mdash; what was it and did it work? (2) Delivery &mdash; tone, acting, pacing. (3) Angle &mdash; story entry point. (4) Emotion &mdash; what feeling was aimed for? (5) Flow &mdash; did it hold attention to the end? (6) <strong>DM Factor</strong> &mdash; why would or wouldn&rsquo;t someone send this to a friend?</span><span class="lid">Urai: (1) Hook &mdash; apa itu dan apakah berhasil? (2) Delivery &mdash; nada, akting, tempo. (3) Angle &mdash; sudut masuk cerita. (4) Emosi &mdash; perasaan apa yang dituju? (5) Flow &mdash; apakah perhatian bertahan sampai akhir? (6) <strong>Faktor DM</strong> &mdash; kenapa seseorang mau atau tidak mau mengirim ini ke temannya?</span></td></tr>
+    <tr><td><span class="len">STEP 3<br>Find the Pattern</span><span class="lid">LANGKAH 3<br>Temukan Pola</span></td><td><span class="len">Look for repeating patterns in what works &mdash; especially what earns DM shares and high completion. These become your content playbook &mdash; repeatable formulas for new topics.</span><span class="lid">Cari pola yang berulang dalam konten yang berhasil &mdash; terutama yang mendapat DM shares dan completion tinggi. Ini menjadi playbook kontenmu &mdash; formula yang bisa diulangi untuk topik baru.</span></td></tr>
+  </tbody></table></div>
+
+  <h3><span class="len">Instagram 2026: Trial Reels Workflow</span><span class="lid">Instagram 2026: Alur Kerja Trial Reels</span></h3>
+  <div class="ig-update-badge">&#x1F4F8; New Feature &mdash; Trial Reels</div>
+  <p class="len" style="font-size:14px;color:var(--ink-3);margin-bottom:16px;">Trial Reels lets you test content with non-followers before publishing to your profile. Recommended by Mosseri specifically for 2026. Use it for experimental formats, new angles, or content you&rsquo;re unsure about.</p>
+  <p class="lid" style="font-size:14px;color:var(--ink-3);margin-bottom:16px;">Trial Reels memungkinkan kamu menguji konten dengan non-followers sebelum publish ke profil. Direkomendasikan langsung oleh Mosseri untuk 2026. Gunakan untuk format eksperimental, angle baru, atau konten yang belum kamu yakin.</p>
+  <div class="trial-reel-grid">
+    <div class="trial-step">
+      <div class="trial-step-num">1</div>
+      <div class="trial-step-body"><strong><span class="len">Create — don&rsquo;t publish yet</span><span class="lid">Buat — jangan publish dulu</span></strong><span class="len">Select "Trial Reel" before posting. It goes to non-followers only for 24 hours &mdash; not your profile.</span><span class="lid">Pilih "Trial Reel" sebelum posting. Hanya ke non-followers selama 24 jam &mdash; tidak ke profilmu.</span></div>
+    </div>
+    <div class="trial-step">
+      <div class="trial-step-num">2</div>
+      <div class="trial-step-body"><strong><span class="len">Watch the early signals</span><span class="lid">Pantau sinyal awal</span></strong><span class="len">Check watch completion % and DM shares within the first 24 hours. These are your performance signals.</span><span class="lid">Cek % watch completion dan DM shares dalam 24 jam pertama. Ini adalah sinyal performa kamu.</span></div>
+    </div>
+    <div class="trial-step">
+      <div class="trial-step-num">3</div>
+      <div class="trial-step-body"><strong><span class="len">If it performs: push live</span><span class="lid">Jika berhasil: publish ke semua</span></strong><span class="len">Good early data = publish to your full audience. Protect your profile metrics by only showing winners.</span><span class="lid">Data awal bagus = publish ke semua audiens. Jaga metrik profilmu dengan hanya menampilkan konten yang berhasil.</span></div>
+    </div>
+    <div class="trial-step">
+      <div class="trial-step-num">4</div>
+      <div class="trial-step-body"><strong><span class="len">If it underperforms: learn &amp; revise</span><span class="lid">Jika kurang bagus: pelajari &amp; revisi</span></strong><span class="len">Low completion = hook/middle needs work. Low DM shares = emotional payoff isn&rsquo;t landing. Edit and retry.</span><span class="lid">Completion rendah = hook/tengah perlu diperbaiki. DM shares rendah = emotional payoff belum kena. Edit dan coba lagi.</span></div>
+    </div>
+  </div>
+
+  <h3><span class="len">The Winning Content Rule</span><span class="lid">Aturan Winning Content</span></h3>
+  <p class="len">When a piece of content performs exceptionally well, most teams move on. <strong>Don&rsquo;t do this.</strong> Instead:</p>
+  <p class="lid">Ketika sebuah konten tampil sangat baik, kebanyakan tim langsung lanjut. <strong>Jangan lakukan ini.</strong> Sebaliknya:</p>
+  <ul>
+    <li class="len">Identify exactly WHY it worked &mdash; hook type, emotion, and specifically what made people want to DM it</li><li class="lid">Identifikasi KENAPA konten itu berhasil &mdash; jenis hook, emosi, dan khususnya apa yang membuat orang ingin DM-kannya</li>
+    <li class="len">Immediately plan 3&ndash;5 follow-up pieces using the same winning formula in a new context</li><li class="lid">Segera rencanakan 3&ndash;5 konten lanjutan menggunakan formula winning yang sama dalam konteks baru</li>
+    <li class="len">Test variations: same hook type + different topic; same DM-worthy emotion + different situation</li><li class="lid">Uji variasi: jenis hook sama + topik berbeda; emosi DM-worthy yang sama + situasi berbeda</li>
+    <li class="len">Use Trial Reels on the variations before committing to the full audience</li><li class="lid">Gunakan Trial Reels untuk variasi tersebut sebelum publish ke seluruh audiens</li>
+  </ul>
+  <div class="callout callout-orange">
+    <p class="len">Winning content is a blueprint, not a one-off. <strong>Squeeze it.</strong></p>
+    <p class="lid">Winning content adalah cetak biru, bukan kejadian sekali. <strong>Peras habis.</strong></p>
+  </div>
+</div>
+
+<!-- S10 -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <span class="section-num">10</span>
+    <span class="section-title"><span class="len">Pre-Publish Checklist</span><span class="lid">Checklist Sebelum Publish</span></span>
+  </div>
+  <p class="len">Before any content goes live, run it through this checklist. If you can&rsquo;t answer "yes" to most of these, it&rsquo;s not ready.</p>
+  <p class="lid">Sebelum konten apapun tayang, jalankan melalui checklist ini. Kalau kamu tidak bisa menjawab "ya" untuk sebagian besar poin ini, konten belum siap.</p>
+  <h3><span class="len">Idea &amp; Strategy</span><span class="lid">Ide &amp; Strategi</span></h3>
+  <div class="table-wrap"><table class="two-col checklist"><tbody>
+    <tr><td>&#x25A1;</td><td><span class="len">Goal</span><span class="lid">Tujuan</span></td><td><span class="len">Does this content have a clear goal? (Reach / Consideration / Conversion)</span><span class="lid">Apakah konten ini punya tujuan yang jelas? (Reach / Consideration / Conversion)</span></td></tr>
+    <tr><td>&#x25A1;</td><td><span class="len">Audience</span><span class="lid">Audiens</span></td><td><span class="len">Can I name specifically who this content is for?</span><span class="lid">Bisakah aku menyebutkan secara spesifik konten ini untuk siapa?</span></td></tr>
+    <tr><td>&#x25A1;</td><td><span class="len">Formula</span><span class="lid">Formula</span></td><td><span class="len">Have I filled in: Target audience &rarr; Problem &rarr; Situation &rarr; Content?</span><span class="lid">Sudahkah aku mengisi: Target audiens &rarr; Masalah &rarr; Situasi &rarr; Konten?</span></td></tr>
+    <tr><td>&#x25A1;</td><td>Angle</td><td><span class="len">Is the entry point interesting, not just product-focused?</span><span class="lid">Apakah sudut masuknya menarik, tidak hanya berfokus pada produk?</span></td></tr>
+  </tbody></table></div>
+  <h3>Hook</h3>
+  <div class="table-wrap"><table class="two-col checklist"><tbody>
+    <tr><td>&#x25A1;</td><td><span class="len">Stop reason</span><span class="lid">Alasan berhenti</span></td><td><span class="len">Can I clearly answer: "Why would someone stop scrolling at this in the first second?"</span><span class="lid">Bisakah aku menjawab dengan jelas: "Kenapa seseorang akan berhenti scroll di sini di detik pertama?"</span></td></tr>
+    <tr><td>&#x25A1;</td><td><span class="len">Hook type</span><span class="lid">Jenis hook</span></td><td><span class="len">Which of the 4 hook types am I using? (Unusual / Curious / Relatable / Emotional)</span><span class="lid">Mana dari 4 jenis hook yang aku gunakan? (Tidak biasa / Penasaran / Relatable / Emosional)</span></td></tr>
+    <tr><td>&#x25A1;</td><td><span class="len">Visual hook</span><span class="lid">Hook visual</span></td><td><span class="len">Does the first frame earn attention even without sound?</span><span class="lid">Apakah frame pertama mendapatkan perhatian bahkan tanpa suara?</span></td></tr>
+  </tbody></table></div>
+  <h3><span class="len">Content Quality</span><span class="lid">Kualitas Konten</span></h3>
+  <div class="table-wrap"><table class="two-col checklist"><tbody>
+    <tr><td>&#x25A1;</td><td><span class="len">Emotion</span><span class="lid">Emosi</span></td><td><span class="len">Does this make people feel something? (laugh, nod, surprised, touched)</span><span class="lid">Apakah ini membuat orang merasakan sesuatu? (tertawa, manggut, terkejut, tersentuh)</span></td></tr>
+    <tr><td>&#x25A1;</td><td><span class="len">Relatability</span><span class="lid">Relevansi</span></td><td><span class="len">Would our target mum think "this is so me"?</span><span class="lid">Apakah ibu target kita akan berpikir "ini banget aku"?</span></td></tr>
+    <tr><td>&#x25A1;</td><td><span class="len">Brand voice</span><span class="lid">Suara brand</span></td><td><span class="len">Is the tone warm, playful, and real &mdash; not corporate or stiff?</span><span class="lid">Apakah nadanya hangat, playful, dan nyata &mdash; tidak korporat atau kaku?</span></td></tr>
+    <tr><td>&#x25A1;</td><td>Caption</td><td><span class="len">Is the caption conversational? Does it have a hook and/or a CTA?</span><span class="lid">Apakah caption-nya percakapan? Apakah ada hook dan/atau CTA?</span></td></tr>
+    <tr><td>&#x25A1;</td><td><span class="len">Not salesy</span><span class="lid">Tidak sales-y</span></td><td><span class="len">For Reach content: is the product appearing naturally, not as the focus?</span><span class="lid">Untuk konten Reach: apakah produk muncul secara natural, bukan sebagai fokus?</span></td></tr>
+  </tbody></table></div>
+  <h3><span class="len">Brand Compliance</span><span class="lid">Kepatuhan Brand</span></h3>
+  <div class="table-wrap"><table class="two-col checklist"><tbody>
+    <tr><td>&#x25A1;</td><td><span class="len">Colors</span><span class="lid">Warna</span></td><td><span class="len">Warm palette only. No blue or purple. Cream background, orange accents.</span><span class="lid">Hanya palet hangat. Tidak ada biru atau ungu. Latar krem, aksen oranye.</span></td></tr>
+    <tr><td>&#x25A1;</td><td><span class="len">Copy casing</span><span class="lid">Penulisan huruf</span></td><td><span class="len">Headlines in sentence case. Labels and badges in ALL CAPS. No Title Case.</span><span class="lid">Headline dalam sentence case. Label dan badge dalam ALL CAPS. Tidak ada Title Case.</span></td></tr>
+    <tr><td>&#x25A1;</td><td><span class="len">Language</span><span class="lid">Bahasa</span></td><td><span class="len">No mixing English and Bahasa in one sentence. "kamu" not "anda".</span><span class="lid">Tidak mencampur Inggris dan Indonesia dalam satu kalimat. "kamu" bukan "anda".</span></td></tr>
+    <tr><td>&#x25A1;</td><td>Hashtag</td><td>#happypumpkin #happypumpkinid + <span class="len">relevant local parenting tags</span><span class="lid">hashtag parenting lokal yang relevan</span></td></tr>
+  </tbody></table></div>
+</div>
+
+<!-- S11 -->
+<div class="section" id="s11">
+  <div class="section-header">
+    <span class="section-num">11</span>
+    <span class="section-title"><span class="len">Dos &amp; Don&rsquo;ts</span><span class="lid">Boleh &amp; Tidak Boleh</span></span>
+  </div>
+  <div class="table-wrap"><table class="dos-donts">
+    <thead><tr><th><span class="len">Topic</span><span class="lid">Topik</span></th><th>&#x2705; <span class="len">DO</span><span class="lid">BOLEH</span></th><th>&#x274C; <span class="len">DON&rsquo;T</span><span class="lid">JANGAN</span></th></tr></thead>
+    <tbody>
+      <tr><td><span class="len">Research</span><span class="lid">Riset</span></td><td><span class="len">Analyse WHY content works. Find the emotion, hook, and angle. Adapt for HP.</span><span class="lid">Analisis KENAPA konten berhasil. Temukan emosi, hook, dan angle. Adaptasi untuk HP.</span></td><td><span class="len">Copy formats without understanding the mechanics. Content feels "mirip".</span><span class="lid">Menyalin format tanpa memahami mekanismenya. Konten terasa "mirip".</span></td></tr>
+      <tr><td>Hook</td><td><span class="len">Nail the first 1&ndash;2 seconds. Ask: "Why would someone stop here?"</span><span class="lid">Kuasai 1&ndash;2 detik pertama. Tanya: "Kenapa seseorang akan berhenti di sini?"</span></td><td><span class="len">Assume a nice visual is enough. No clear stop-reason = no views.</span><span class="lid">Mengira visual bagus sudah cukup. Tidak ada alasan berhenti = tidak ada views.</span></td></tr>
+      <tr><td><span class="len">Content goal</span><span class="lid">Tujuan konten</span></td><td><span class="len">Know if each post is Reach, Consideration, or Conversion before creating.</span><span class="lid">Tahu apakah setiap post adalah Reach, Consideration, atau Conversion sebelum membuat.</span></td><td><span class="len">Post everything as if it&rsquo;s an ad. Reach content must feel non-commercial.</span><span class="lid">Memposting semuanya seolah-olah iklan. Konten Reach harus terasa non-komersial.</span></td></tr>
+      <tr><td><span class="len">Product placement</span><span class="lid">Penempatan produk</span></td><td><span class="len">Let the product appear naturally in Reach content. Story first, product second.</span><span class="lid">Biarkan produk muncul secara natural dalam konten Reach. Cerita dulu, produk kedua.</span></td><td><span class="len">Open with product features on Reach content. It kills the hook.</span><span class="lid">Membuka dengan fitur produk pada konten Reach. Ini membunuh hook.</span></td></tr>
+      <tr><td><span class="len">Brand voice</span><span class="lid">Suara brand</span></td><td><span class="len">Be warm, playful, real. Like a mum-friend who happens to sell amazing kidswear.</span><span class="lid">Jadilah hangat, playful, nyata. Seperti teman sesama ibu yang kebetulan jual kidswear keren.</span></td><td><span class="len">Be formal, corporate, or stiff. "Anda" and "mohon maaf" are banned.</span><span class="lid">Menjadi formal, korporat, atau kaku. "Anda" dan "mohon maaf" dilarang.</span></td></tr>
+      <tr><td><span class="len">Performance</span><span class="lid">Performa</span></td><td><span class="len">Read the numbers within 48 hours. Diagnose what to fix specifically.</span><span class="lid">Baca angkanya dalam 48 jam. Diagnosa apa yang harus diperbaiki secara spesifik.</span></td><td><span class="len">Blame the algorithm. The numbers tell you where the content broke down.</span><span class="lid">Menyalahkan algoritma. Angka-angka memberitahu kamu di mana konten gagal.</span></td></tr>
+      <tr><td><span class="len">Winning content</span><span class="lid">Winning content</span></td><td><span class="len">Identify your best performers and immediately build follow-up content.</span><span class="lid">Identifikasi kontenmu yang paling bagus dan segera buat konten lanjutan.</span></td><td><span class="len">Move on from a viral post without extracting what made it work.</span><span class="lid">Melanjutkan dari post viral tanpa mengekstrak apa yang membuatnya berhasil.</span></td></tr>
+      <tr><td><span class="len">Creative freedom</span><span class="lid">Kebebasan kreatif</span></td><td><span class="len">Propose ideas, experiment with formats, bring your personality to content.</span><span class="lid">Ajukan ide, eksperimen dengan format, bawa kepribadianmu ke konten.</span></td><td><span class="len">Wait to be briefed on every single post. Initiative is expected.</span><span class="lid">Menunggu diberi brief untuk setiap post. Inisiatif adalah hal yang diharapkan.</span></td></tr>
+      <tr><td><span class="len">Language</span><span class="lid">Bahasa</span></td><td><span class="len">Use English or Bahasa. Both are valid. Match the tone to the platform.</span><span class="lid">Gunakan Inggris atau Indonesia. Keduanya valid. Sesuaikan nada dengan platform.</span></td><td><span class="len">Mix both in one sentence. Never "This is baju yang sangat comfortable".</span><span class="lid">Mencampur keduanya dalam satu kalimat. Tidak pernah "This is baju yang sangat comfortable".</span></td></tr>
+      <tr><td><span class="len">Visual style</span><span class="lid">Gaya visual</span></td><td><span class="len">Warm daylight, real children, slight mess, genuine moments.</span><span class="lid">Cahaya siang hangat, anak nyata, sedikit kekacauan, momen yang tulus.</span></td><td><span class="len">Over-produced, cool-toned studio shots that feel premium but cold.</span><span class="lid">Produksi berlebihan, foto studio bernuansa dingin yang terasa premium tapi dingin.</span></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- S12 -->
+<div class="section" id="s12">
+  <div class="section-header">
+    <span class="section-num">12</span>
+    <span class="section-title"><span class="len">Supplementary Reference</span><span class="lid">Referensi Tambahan</span></span>
+  </div>
+  <div class="callout callout-orange" style="margin-bottom:24px;">
+    <p class="len" style="font-size:15px;">These are general frameworks from SYCA (Start Your Content Academy) shared as <strong>loose inspiration</strong> &mdash; not a rigid system HP must follow. Adapt what fits naturally; ignore what doesn&rsquo;t. HP&rsquo;s core audience formula and hook framework (Sections 4 &amp; 6) always take priority.</p>
+    <p class="lid" style="font-size:15px;">Ini adalah framework umum dari SYCA (Start Your Content Academy) yang dibagikan sebagai <strong>inspirasi longgar</strong> &mdash; bukan sistem kaku yang harus diikuti HP. Ambil yang sesuai secara alami; abaikan yang tidak. Formula audiens inti dan framework hook HP (Bagian 4 &amp; 6) selalu menjadi prioritas utama.</p>
+  </div>
+  <h3><span class="len">A. The IDEAS Content Type Menu</span><span class="lid">A. Menu Tipe Konten IDEAS</span></h3>
+  <p class="len" style="color:var(--hp-mid);font-size:15px;margin-bottom:16px;">A useful checklist for variety &mdash; when planning the calendar, make sure the month isn&rsquo;t all one type.</p>
+  <p class="lid" style="color:var(--hp-mid);font-size:15px;margin-bottom:16px;">Checklist berguna untuk variasi &mdash; pastikan dalam satu bulan tidak semuanya satu tipe.</p>
+  <div class="s12-card"><div class="s12-card-title">I &mdash; Inspire</div>
+    <p class="len">Content that helps the audience imagine a better version of themselves. For HP: showing mums whose kids look great and happy. Examples &mdash; relatable quotes, before/after outfit moments, "life after finding the right brand" storytelling.</p>
+    <p class="lid">Konten yang membantu audiens membayangkan versi lebih baik dari diri mereka. Untuk HP: menunjukkan ibu yang anak-anaknya tampil cantik dan bahagia. Contoh &mdash; quotes relatable, momen before/after baju, storytelling "kehidupan setelah menemukan brand yang tepat".</p>
+  </div>
+  <div class="s12-card"><div class="s12-card-title">D &mdash; Discussion</div>
+    <p class="len">Content that invites the audience to interact and share opinions. For HP: "Baju lebaran pilih yang mana, moms?", polling between two styles, Ask Me Anything on sizing, tebak-tebakan launching new collections.</p>
+    <p class="lid">Konten yang mengajak audiens berinteraksi dan berbagi pendapat. Untuk HP: "Baju lebaran pilih yang mana, moms?", polling dua gaya berbeda, Ask Me Anything soal ukuran, tebak-tebakan koleksi baru.</p>
+  </div>
+  <div class="s12-card"><div class="s12-card-title">E &mdash; Educate &amp; Entertain</div>
+    <p class="len">Tips, tutorials, hacks, fun facts, myth-busting, and humour. For HP: "cara pilih ukuran bayi yang tepat", fabric care tips, fun facts about our materials, meme-style parenting humour. Purely educational content rarely converts &mdash; always tie it back to the mum&rsquo;s real life.</p>
+    <p class="lid">Tips, tutorial, hack, fun fact, membongkar mitos, dan humor. Untuk HP: "cara pilih ukuran bayi yang tepat", tips perawatan bahan, fun fact soal material produk, humor parenting bergaya meme. Konten edukatif murni jarang convert &mdash; selalu kaitkan dengan kehidupan nyata ibu.</p>
+  </div>
+  <div class="s12-card"><div class="s12-card-title">A &mdash; Attachment</div>
+    <p class="len">Content that builds emotional closeness between brand and audience. For HP: behind-the-scenes packing days, "meet the team" moments, featuring a loyal mum customer&rsquo;s story, thanking the community for milestones.</p>
+    <p class="lid">Konten yang membangun kedekatan emosional antara brand dan audiens. Untuk HP: behind-the-scenes hari packing, momen "kenalan sama team", menampilkan cerita pelanggan ibu yang loyal, mengucap terima kasih ke komunitas atas pencapaian.</p>
+  </div>
+  <div class="s12-card" style="margin-bottom:28px;"><div class="s12-card-title">S &mdash; Storyselling &amp; Softselling</div>
+    <p class="len">Selling through story, not announcement. Lead with the customer&rsquo;s problem &rarr; situation &rarr; outcome, and let the product appear as the natural solution. SYCA principle: "too much education without selling doesn&rsquo;t make money either" &mdash; balance both.</p>
+    <p class="lid">Menjual melalui cerita, bukan pengumuman. Mulai dengan masalah pelanggan &rarr; situasi &rarr; hasil, dan biarkan produk muncul sebagai solusi alami. Prinsip SYCA: "terlalu banyak edukasi tanpa jualan juga tidak menghasilkan uang" &mdash; seimbangkan keduanya.</p>
+  </div>
+  <h3><span class="len">B. Hook Template Bank</span><span class="lid">B. Bank Template Hook</span></h3>
+  <p class="len" style="color:var(--hp-mid);font-size:15px;margin-bottom:16px;">Fill-in-the-blank starters from SYCA&rsquo;s hook library. Use as a starting point when stuck &mdash; always adapt to HP&rsquo;s warm voice.</p>
+  <p class="lid" style="color:var(--hp-mid);font-size:15px;margin-bottom:16px;">Template hook isi-sendiri dari perpustakaan hook SYCA. Gunakan sebagai titik awal saat stuck &mdash; selalu adaptasi ke voice hangat HP.</p>
+  <div class="hook-grid">
+    <div class="hook-card"><strong><span class="len">Secret / Curiosity</span><span class="lid">Rahasia / Penasaran</span></strong><span class="len">"The secret about (...) most people don&rsquo;t know"</span><span class="lid">"Rahasia (...) yang jarang orang tahu"</span></div>
+    <div class="hook-card"><strong><span class="len">Stop / Pattern Break</span><span class="lid">Stop / Pecah Pola</span></strong><span class="len">"Stop (...) if you want (...)"</span><span class="lid">"Stop (...) kalau kalian ingin (...)"</span></div>
+    <div class="hook-card"><strong><span class="len">Simple / Low Effort</span><span class="lid">Simpel / Mudah</span></strong><span class="len">"Only need (...) to (...) without the hassle"</span><span class="lid">"Cuma butuh (...) untuk (...) tanpa ribet"</span></div>
+    <div class="hook-card"><strong><span class="len">Myth / Fact</span><span class="lid">Mitos / Fakta</span></strong><span class="len">"Myth or fact? (...)"</span><span class="lid">"Mitos atau fakta? (...)"</span></div>
+    <div class="hook-card"><strong><span class="len">Reframe</span><span class="lid">Reframe</span></strong><span class="len">"You&rsquo;re not (...). You just haven&rsquo;t learned how to (...)"</span><span class="lid">"Kamu itu gak (...). Kamu cuma belum tau cara (...)"</span></div>
+    <div class="hook-card"><strong><span class="len">Warning / Avoid</span><span class="lid">Peringatan / Hindari</span></strong><span class="len">"Never do (...) if you don&rsquo;t want to regret it"</span><span class="lid">"Jangan pernah lakuin (...) kalau gamau nyesel"</span></div>
+    <div class="hook-card"><strong><span class="len">Personal Story</span><span class="lid">Cerita Pribadi</span></strong><span class="len">"I didn&rsquo;t know (...) until (...)"</span><span class="lid">"Aku gak tau kalau (...) sampai aku (...)"</span></div>
+    <div class="hook-card"><strong><span class="len">Who Feels This?</span><span class="lid">Siapa yang Merasakan Ini?</span></strong><span class="len">"Who else still does (...) like this?"</span><span class="lid">"Siapa disini yang masih sering (...) kaya gini"</span></div>
+    <div class="hook-card"><strong><span class="len">Surprise Reveal</span><span class="lid">Ungkapan Mengejutkan</span></strong><span class="len">"Did you know (...) actually (...)"</span><span class="lid">"Lo tau gak kalau (...) ternyata (...)"</span></div>
+    <div class="hook-card"><strong><span class="len">Number / List</span><span class="lid">Angka / Daftar</span></strong><span class="len">"5 (...) that are kept secret &mdash; you need to know this"</span><span class="lid">"5 (...) yang dirahasiakan, kamu wajib tau"</span></div>
+  </div>
+  <h3><span class="len">C. Content Calendar Structure (SYCA Reference)</span><span class="lid">C. Struktur Content Calendar (Referensi SYCA)</span></h3>
+  <p class="len" style="color:var(--hp-mid);font-size:15px;margin-bottom:16px;">The SYCA calendar template (<code>CONTENT CALENDAR SYCA.xlsx</code>) offers a practical weekly grid. Use as a scheduling tool, not a creative constraint.</p>
+  <p class="lid" style="color:var(--hp-mid);font-size:15px;margin-bottom:16px;">Template kalender SYCA (<code>CONTENT CALENDAR SYCA.xlsx</code>) menawarkan format grid mingguan praktis. Gunakan sebagai alat penjadwalan, bukan batasan kreatif.</p>
+  <div class="cal-grid">
+    <div class="cal-card"><strong><span class="len">Content idea + pillar</span><span class="lid">Ide konten + pilar</span></strong><span class="len">What&rsquo;s the post and which IDEAS type is it?</span><span class="lid">Apa postingannya dan tipe IDEAS-nya apa?</span></div>
+    <div class="cal-card"><strong><span class="len">Format + platform</span><span class="lid">Format + platform</span></strong><span class="len">Reel, carousel, single image, story &mdash; and where it posts</span><span class="lid">Reel, carousel, gambar tunggal, story &mdash; dan di mana diposting</span></div>
+    <div class="cal-card"><strong>Status</strong><span class="len">Ready to edit &rarr; Editing &rarr; Ready to post &rarr; Published</span><span class="lid">Siap edit &rarr; Editing &rarr; Siap posting &rarr; Published</span></div>
+  </div>
+</div>
+
+<!-- QR -->
+<div class="section" id="qr">
+  <div class="section-header">
+    <span class="section-num">&#x26A1;</span>
+    <span class="section-title"><span class="len">Quick Reference Card</span><span class="lid">Kartu Referensi Cepat</span></span>
+  </div>
+  <div class="formula-box" style="margin-bottom:12px;">
+    <div class="formula-text len">Target Audience &rarr; Their Problem &rarr; Their Situation &rarr; Content</div>
+    <div class="formula-text lid">Target Audiens &rarr; Masalah Mereka &rarr; Situasi Mereka &rarr; Konten</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+    <div class="formula-box"><div class="formula-text" style="font-size:15px;"><span class="len">Ide (What) 50% + Delivery (How) 30% + Persona (Who) 20%</span><span class="lid">Ide (Apa) 50% + Delivery (Cara) 30% + Persona (Siapa) 20%</span></div></div>
+    <div class="formula-box"><div class="formula-text" style="font-size:15px;"><span class="len">Identify &rarr; Consistency &rarr; Amplify</span><span class="lid">Identifikasi &rarr; Konsistensi &rarr; Amplifikasi</span></div><p style="color:rgba(255,255,255,.75);font-size:12px;margin-top:6px;"><span class="len">Persona Formula</span><span class="lid">Formula Persona</span></p></div>
+  </div>
+  <div class="qr-grid">
+    <div class="qr-card">
+      <div class="qr-card-title"><span class="len">Performance Diagnosis</span><span class="lid">Diagnosa Performa</span></div>
+      <div class="qr-row"><span class="qr-label">Views &#x2193;</span><span class="qr-val"><span class="len">Hook not strong enough</span><span class="lid">Hook belum cukup kuat</span></span></div>
+      <div class="qr-row"><span class="qr-label">Likes &#x2193;</span><span class="qr-val"><span class="len">Not relatable / doesn&rsquo;t connect</span><span class="lid">Kurang relatable / tidak terhubung</span></span></div>
+      <div class="qr-row"><span class="qr-label"><span class="len">Comments &#x2193;</span><span class="lid">Komentar &#x2193;</span></span><span class="qr-val"><span class="len">Not provoking opinion or emotion</span><span class="lid">Tidak memancing opini atau emosi</span></span></div>
+      <div class="qr-row"><span class="qr-label">Saves &#x2193;</span><span class="qr-val"><span class="len">Not valuable enough</span><span class="lid">Kurang bernilai</span></span></div>
+      <div class="qr-row"><span class="qr-label">Shares &#x2193;</span><span class="qr-val"><span class="len">Not impactful enough</span><span class="lid">Kurang berdampak</span></span></div>
+    </div>
+    <div class="qr-card">
+      <div class="qr-card-title"><span class="len">The 4 Hook Types</span><span class="lid">4 Jenis Hook</span></div>
+      <div class="qr-row"><span class="qr-label"><span class="len">Unusual</span><span class="lid">Tidak biasa</span></span><span class="qr-val"><span class="len">Visual/opening that stops scroll</span><span class="lid">Visual/pembuka yang menghentikan scroll</span></span></div>
+      <div class="qr-row"><span class="qr-label"><span class="len">Curious</span><span class="lid">Penasaran</span></span><span class="qr-val"><span class="len">"Hah? What does that mean?"</span><span class="lid">"Hah? Apa maksudnya?"</span></span></div>
+      <div class="qr-row"><span class="qr-label">Relatable</span><span class="qr-val"><span class="len">POV they immediately feel</span><span class="lid">POV yang langsung mereka rasakan</span></span></div>
+      <div class="qr-row"><span class="qr-label"><span class="len">Emotional</span><span class="lid">Emosional</span></span><span class="qr-val"><span class="len">Funny, surprised, annoyed, touching</span><span class="lid">Lucu, kaget, kesel, menyentuh</span></span></div>
+    </div>
+    <div class="qr-card">
+      <div class="qr-card-title"><span class="len">Content Evaluation (3 steps)</span><span class="lid">Evaluasi Konten (3 langkah)</span></div>
+      <div class="qr-row"><span class="qr-label"><span class="len">Step 1</span><span class="lid">Langkah 1</span></span><span class="qr-val"><span class="len">Compare: performing vs not performing</span><span class="lid">Bandingkan: yang berhasil vs tidak</span></span></div>
+      <div class="qr-row"><span class="qr-label"><span class="len">Step 2</span><span class="lid">Langkah 2</span></span><span class="qr-val"><span class="len">Dissect: Hook / Delivery / Angle / Emotion / Flow</span><span class="lid">Bedah: Hook / Delivery / Angle / Emosi / Flow</span></span></div>
+      <div class="qr-row"><span class="qr-label"><span class="len">Step 3</span><span class="lid">Langkah 3</span></span><span class="qr-val"><span class="len">Find the pattern from successful content</span><span class="lid">Temukan pola dari konten yang berhasil</span></span></div>
+    </div>
+    <div class="qr-card">
+      <div class="qr-card-title"><span class="len">Content Goal Mix (2026)</span><span class="lid">Komposisi Tujuan Konten (2026)</span></div>
+      <div class="qr-row"><span class="qr-label" style="color:var(--hp-orange)">60%</span><span class="qr-val">Reach (<span class="len">Awareness</span><span class="lid">Kesadaran</span>)</span></div>
+      <div class="qr-row"><span class="qr-label" style="color:#B87800">30%</span><span class="qr-val">Consideration (<span class="len">Educate</span><span class="lid">Edukasi</span>)</span></div>
+      <div class="qr-row"><span class="qr-label" style="color:#3A7A72">10%</span><span class="qr-val">Conversion (<span class="len">Action</span><span class="lid">Aksi</span>)</span></div>
+      <div class="qr-row" style="margin-top:6px;"><span class="qr-val" style="font-size:12.5px;color:var(--hp-mid)"><span class="len">Reels for Reach &middot; Feed for brand image</span><span class="lid">Reels untuk Reach &middot; Feed untuk brand image</span></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <strong>happy pumpkin</strong> &mdash; <span class="len">Made with YAY! for tiny humans</span><span class="lid">Dibuat dengan YAY! untuk si kecil</span><br>
+  CV Dwi Putra Mandiri &middot; Jakarta &middot; 2026
+</div>
+
+</div><!-- /content -->
+</main><!-- /main -->
+
+<script>
+var lang='en';
+function toggleLang(){
+  lang=lang==='en'?'id':'en';
+  if(lang==='id'){document.body.classList.add('id-mode');document.getElementById('lang-btn').textContent='🇬🇧 English';document.documentElement.lang='id';}
+  else{document.body.classList.remove('id-mode');document.getElementById('lang-btn').textContent='🇮🇩 Bahasa Indonesia';document.documentElement.lang='en';}
+}
+var sections=document.querySelectorAll('.section[id]');
+var navLinks=document.querySelectorAll('.nav-item');
+function setActiveNav(){
+  var scrollY=window.scrollY;
+  var current='';
+  sections.forEach(function(sec){
+    if(sec.getBoundingClientRect().top<=120)current=sec.getAttribute('id');
+  });
+  navLinks.forEach(function(link){
+    link.classList.remove('is-active');
+    if(link.getAttribute('href')==='#'+current)link.classList.add('is-active');
+  });
+}
+window.addEventListener('scroll',setActiveNav,{passive:true});
+setTimeout(setActiveNav,100);
+</script>
+</body>
+</html>

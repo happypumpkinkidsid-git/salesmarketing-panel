@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HP Creative Hub</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">Happy <span>Pumpkin</span></div>
+      <div class="sub">Creative Hub</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <div class="nav-item active" data-section="dashboard">
+        <span class="icon">🏠</span> Dashboard
+        <span class="notif-badge" id="overdueCount" style="display:none"></span>
+      </div>
+      <div class="nav-item" data-section="calendar">
+        <span class="icon">📅</span> Content Calendar
+      </div>
+
+      <div class="nav-section-label">Resources</div>
+      <div class="nav-item" data-section="docs">
+        <span class="icon">📁</span> Document Hub
+      </div>
+      <div class="nav-item" data-section="hooks">
+        <span class="icon">💡</span> Hook Bank
+      </div>
+      <div class="nav-item" data-section="competitors">
+        <span class="icon">🔍</span> Competitor Intel
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="refresh-info" id="lastRefreshLabel">Not yet synced</div>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadAllData()">↻ Refresh Data</button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+        <div class="topbar-sub" id="topbarSub">Loading…</div>
+      </div>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </header>
+
+    <div class="content">
+      <div id="section-dashboard"   class="section active"></div>
+      <div id="section-calendar"    class="section"></div>
+      <div id="section-docs"        class="section"></div>
+      <div id="section-hooks"       class="section"></div>
+      <div id="section-competitors" class="section"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Calendar day modal -->
+<div class="modal-overlay" id="dayModal" style="display:none" onclick="closeDayModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modalDate"></div>
+      <button class="modal-close" onclick="closeDayModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
