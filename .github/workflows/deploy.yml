@@ -1,0 +1,33 @@
+name: Deploy to Netlify
+
+# Push to main → build & deploy hpsalesadmin (sales dashboard + embedded KOL
+# Command Center + the Supabase function). The Supabase env vars live in
+# Netlify's site settings, so they're not needed here — only the deploy creds.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: netlify-prod
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Deploy (prod, with functions bundled)
+        run: npx netlify deploy --prod --build --message "CI: ${{ github.sha }}"
