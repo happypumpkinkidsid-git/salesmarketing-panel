@@ -18,7 +18,7 @@ ROOT   = os.path.dirname(HERE)                          # hp-dashboards/
 EXCEL  = os.path.join(os.path.dirname(os.path.dirname(ROOT)), 'Projects', 'DEPLOY-KOL-Dashboard.xlsx')
 # Projects/hp-dashboards/.. = Projects ; xlsx sits in Projects/
 EXCEL  = '/Users/alexandergrant/Documents/Claude/Projects/DEPLOY-KOL-Dashboard.xlsx'
-OUT    = os.path.join(ROOT, 'apps', 'kol-command-center', 'js', 'data.js')
+OUT    = os.path.join(ROOT, 'apps', 'hp-sales-dashboard', 'kol', 'js', 'data.js')
 TODAY  = date.today().isoformat()
 
 # ── rate parser ───────────────────────────────────────────────

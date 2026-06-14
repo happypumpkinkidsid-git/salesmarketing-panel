@@ -4,7 +4,10 @@
 # or via root landing + redirects.
 
 [build]
-  publish = "apps/kol-command-center"
+  # Primary site = HP Sales Network admin (hpsalesadmin.netlify.app).
+  # The KOL Command Center is served within it at /kol and embedded as the
+  # "KOL Command Center" tab. Functions are shared from netlify/functions.
+  publish = "apps/hp-sales-dashboard"
   functions = "netlify/functions"
 
 [functions]

@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "kol-command-center",
+      "name": "hpsalesadmin",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "7782", "--directory", "apps/kol-command-center"],
+      "runtimeArgs": ["-m", "http.server", "7782", "--directory", "apps/hp-sales-dashboard"],
       "port": 7782
     }
   ]

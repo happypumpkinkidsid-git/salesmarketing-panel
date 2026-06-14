@@ -64,7 +64,7 @@ function navigate(sec) {
     'dist-intel':['Distributor Intelligence','Cohort retention, LTV, churn signals & reactivation'],
     leads:       ['Leads Pipeline',          'Potential & qualified distributor leads'],
     kol:         ['KOL Brief Generator',     'Buat brief kolaborasi untuk influencer & KOL'],
-    'kol-program':['KOL Program',           'Manajemen & Screening Creator'],
+    'kol-program':['KOL Command Center',     'Keputusan, rate card, negosiasi & pool — satu tempat'],
     inventory:   ['Inventory & Stock',       'Live stock levels and reorder alerts'],
     sessions:    ['Live Sessions',           'Shopee & TikTok live session tracking'],
     orders:      ['Order Operations',        'Fulfilment status and SLA monitoring'],
@@ -86,7 +86,7 @@ function renderSection(sec) {
   if (sec === 'dist-intel')  renderDistributorIntel();
   if (sec === 'leads')       renderLeads();
   if (sec === 'kol')         renderKOLBrief();
-  if (sec === 'kol-program') renderKOLProgram();
+  if (sec === 'kol-program') renderKOLCommandCenter();
   if (sec === 'inventory')   renderInventoryLocked();
   if (sec === 'sessions')    renderSessionsLocked();
   if (sec === 'orders')      renderOrdersLocked();
@@ -2770,6 +2770,25 @@ function kolFilteredData() {
     }
     return true;
   });
+}
+
+// ── KOL Command Center (embedded full app at /kol) ────────────
+// The standalone KOL Command Center lives at /kol and is also reachable
+// directly. Here we embed it inside the admin shell as the KOL Program tab.
+function renderKOLCommandCenter() {
+  const el = document.getElementById('section-kol-program');
+  if (!el) return;
+  if (el.dataset.embedded === '1') return;   // don't reload iframe on re-nav
+  el.dataset.embedded = '1';
+  el.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <a href="kol/index.html" target="_blank" rel="noopener"
+         style="font-size:12px;font-weight:700;color:var(--primary,#ff7a1a);text-decoration:none">
+        Buka di tab penuh ↗
+      </a>
+    </div>
+    <iframe src="kol/index.html" title="KOL Command Center"
+      style="width:100%;height:calc(100vh - 150px);border:1px solid var(--line,#e7eaf0);border-radius:12px;background:#f5f6fa"></iframe>`;
 }
 
 // ── Step 5: Section shell ─────────────────────────────────────

@@ -7,20 +7,27 @@ Monorepo for Happy Pumpkin's internal web tools.
 
 ```
 apps/
-  kol-command-center/   ← KOL & campaign management (Hasna-facing) — backend-wired
-  hp-sales-dashboard/   ← internal sales network — migrated in
-  hp-dashboard/         ← creative hub — migrated in
-netlify/functions/      ← serverless API (talks to Supabase)
+  hp-sales-dashboard/   ← PRIMARY site → hpsalesadmin.netlify.app
+    kol/                ← KOL Command Center (served at /kol, embedded as a tab)
+  hp-dashboard/         ← creative hub (own site, later)
+netlify/functions/      ← serverless API (talks to Supabase), shared
 supabase/schema.sql     ← database schema
-scripts/build-seed.py   ← regenerates KOL seed from Excel + Juni sheet
+scripts/sync-sheets.py  ← LIVE regen of KOL seed from Hasna's Google Sheet
+scripts/build-seed.py   ← offline regen from the Excel (fallback)
 ```
 
-### Deploy topology (Netlify, one site per app)
-`netlify.toml` defaults the primary site to `apps/kol-command-center`. To deploy the
-other two, add them as **separate Netlify sites from the same repo**, each with its
-**base directory** set (Site settings → Build & deploy → Base directory):
-`apps/hp-sales-dashboard` and `apps/hp-dashboard`. Functions stay shared at
-`netlify/functions` and are reachable at `/.netlify/functions/kol` from any site.
+### Deploy topology (one Netlify site)
+`netlify.toml` publishes `apps/hp-sales-dashboard` to the existing
+**hpsalesadmin.netlify.app** site. The KOL Command Center lives inside it at `/kol`
+and is embedded as the "KOL Command Center" sidebar tab (iframe); the standalone
+`/kol/` URL also works directly. Functions are shared at `netlify/functions`
+(`/.netlify/functions/kol`). The creative hub (`apps/hp-dashboard`) becomes its own
+Netlify site later if needed.
+
+**To wire it:** point the existing hpsalesadmin Netlify site at this GitHub repo
+(Site settings → Build & deploy → link repository), base directory empty / repo root,
+publish `apps/hp-sales-dashboard`, functions `netlify/functions` — all read from
+`netlify.toml`.
 
 ## KOL Command Center
 

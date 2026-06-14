@@ -3,7 +3,7 @@
 // LIVE from Hasna's Google Sheet (Pool gid=0 + Juni gid=529779299).
 // Loaded into Supabase via `seed`; also the localStorage fallback.
 // DO NOT edit by hand — re-run the sync.
-// Synced: 2026-06-13  |  79 KOLs (8 active Juni)
+// Synced: 2026-06-14  |  79 KOLs (8 active Juni)
 // ============================================================
 window.KOL_SEED = [
   {
