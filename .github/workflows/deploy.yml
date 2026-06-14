@@ -30,4 +30,4 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Deploy (prod, with functions bundled)
-        run: npx netlify deploy --prod --build --message "CI: ${{ github.sha }}"
+        run: npx netlify deploy --prod --build --message "CI ${{ github.sha }}"
