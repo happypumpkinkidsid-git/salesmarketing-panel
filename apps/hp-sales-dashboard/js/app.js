@@ -1128,6 +1128,42 @@ function showToast(msg, type = '') {
 // --- Product & Tier Databases ---
 
 const HP_PRODUCTS_DB = {
+  'SoftAir': {
+    tagline: 'Seringan udara. Selembut pelukan.',
+    type: 'Soft Comfort Knit',
+    color: '#6BAED6',
+    features: [
+      ['Air-Soft Handfeel',      'Rajutan ringan yang terasa seperti udara di kulit si kecil.'],
+      ['Breathable Everyday',    'Sirkulasi udara baik — nyaman dipakai seharian di iklim tropis.'],
+      ['Gentle on Newborn Skin', 'Lembut untuk kulit sensitif — minim gesekan, minim iritasi.'],
+      ['Soft Wash-After-Wash',   'Tetap lembut & bentuknya terjaga meski sering dicuci.'],
+    ],
+    construction: [
+      ['Lightweight Soft Knit', 'Konstruksi rajut ringan dengan handfeel selembut kapas premium.'],
+      ['Combed Cotton Yarn',    'Benang katun yang disisir halus — lembut & tidak berbulu.'],
+    ],
+    items: 'Bodysuit · Set · Sleep Set', range: 'Newborn–3Y',
+    trust: ['Gentle on Sensitive Skin', 'SNI Certified', 'Combed Soft Cotton'],
+    hashtags: ['#SoftAir', '#HappyPumpkinSoftAir'],
+  },
+  'BreatheKnit': {
+    tagline: 'Dibuat untuk bernapas. Seperti kulit keduanya.',
+    type: 'Breathable Knit',
+    color: '#3FA796',
+    features: [
+      ['Active Airflow Knit', 'Struktur rajut berpori yang mengalirkan udara — tetap sejuk saat aktif.'],
+      ['Sweat-Friendly',      'Membantu menyerap & menguapkan keringat — kulit tetap kering.'],
+      ['All-Day Comfort',     'Ringan & tidak gerah — cocok untuk anak yang bergerak seharian.'],
+      ['Soft Yet Durable',    'Lembut di kulit, tapi kuat untuk dicuci berulang.'],
+    ],
+    construction: [
+      ['Open-Pore Breathable Knit', 'Rajutan dengan pori mikro yang meningkatkan sirkulasi udara.'],
+      ['Cotton-Rich Blend',         'Mayoritas katun untuk kelembutan, dengan ketahanan ekstra.'],
+    ],
+    items: 'Tee · Set · Romper', range: 'Newborn–6Y',
+    trust: ['Breathable Airflow Knit', 'SNI Certified', 'Sweat-Wicking Cotton'],
+    hashtags: ['#BreatheKnit', '#HappyPumpkinBreatheKnit'],
+  },
   'Sunny Days': {
     tagline: 'Summer doesn\'t need a destination.',
     type: 'Fashion Basic',

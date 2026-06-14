@@ -81,8 +81,11 @@
   function recommendFor(kol) {
     const signal = [kol.niche, kol.angle, kol.notes_hasna, kol.produk, kol.scope, kol.internal_notes]
       .filter(Boolean).join('  ');
-    const style  = inferContentStyle(signal);
-    const family = inferFamily(signal);
+    // Human-set values win; otherwise infer from the notes.
+    const styleSet  = kol.content_style && CREATOR_PROFILES[kol.content_style];
+    const familySet = ['Solo','Sibling','Twins'].includes(kol.family_situation);
+    const style  = styleSet  ? kol.content_style    : inferContentStyle(signal);
+    const family = familySet ? kol.family_situation : inferFamily(signal);
     const prof   = CREATOR_PROFILES[style];
 
     // products: what they were already assigned (normalized) ∪ profile suggestions
@@ -92,8 +95,13 @@
 
     // brief lead = product's natural mode if a clear product is set, else profile lead
     const leadProduct = assigned[0] || prof.products[0];
-    const productMode = PRODUCT_PLAYBOOK[leadProduct] ? PRODUCT_PLAYBOOK[leadProduct].mode : null;
+    const productDriven = assigned.length > 0 && PRODUCT_PLAYBOOK[assigned[0]];
+    const productMode = productDriven ? PRODUCT_PLAYBOOK[assigned[0]].mode : null;
     const briefType = productMode ? mapMode(productMode) : firstMode(prof.brief);
+    // what drove the brief — avoids a contradictory "Mid (Hard)" headline
+    const briefBasis = productDriven
+      ? `produk ${assigned[0]} → ${productMode}`
+      : `profil ${prof.label.split(/[\s/]/)[0]} → ${prof.brief}`;
 
     // family bias → set/bundle + twinning
     const familyNote = family === 'Twins'
@@ -110,7 +118,8 @@
 
     return {
       contentStyle: style, contentLabel: prof.label, family,
-      briefType, briefRange: prof.brief,
+      styleInferred: !styleSet, familyInferred: !familySet,
+      briefType, briefRange: prof.brief, briefBasis,
       products, leadProduct,
       angle: prof.angle, trigger: prof.trigger, audience: prof.audience,
       familyNote, rationale,

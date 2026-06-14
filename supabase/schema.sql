@@ -30,6 +30,10 @@ create table if not exists kol (
   brief_type    text default '',          -- Soft-selling / Mid-selling / Hard-selling
   angle         text default '',
   ref_link      text default '',
+  -- Consideration layer (drives brief recommendation; see kol/js/intelligence.js)
+  content_style    text default '',       -- Educational/Fashion/Baby/Sleep/FamilyVlog/Mom
+  family_situation text default '',       -- Solo/Sibling/Twins
+  audience         text default '',
   -- Money
   rate_cash     int default 0,
   rate_barter   int default 0,

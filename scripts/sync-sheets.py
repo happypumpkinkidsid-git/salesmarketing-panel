@@ -109,6 +109,8 @@ def row_to_record(r, *, juni=False):
         'campaign_month': parse_month(keter) or ('Juni 2026' if juni else ''),
         'produk': parse_produk(keter), 'brief_type': parse_brief(keter),
         'angle': keter.replace('\n', ' ').strip(), 'ref_link': parse_ref(keter),
+        # consideration layer — empty here; inferred live by intelligence.js, human-overridable
+        'content_style': '', 'family_situation': '', 'audience': '',
         'rate_cash': cash, 'rate_barter': barter, 'rate_card': {},
         'notes_hasna': keter if not juni else '', 'internal_notes': '',
         'in_pool': not juni, 'in_juni': juni, 'source': 'Juni' if juni else 'Pool',

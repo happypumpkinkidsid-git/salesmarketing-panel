@@ -90,6 +90,7 @@ for i, r in enumerate(data):
         'brief_type': s(r[11]) if len(r) > 11 else '',
         'angle': s(r[12]) if len(r) > 12 else '',
         'ref_link': '',
+        'content_style': '', 'family_situation': '', 'audience': '',
         'rate_cash': cash, 'rate_barter': barter,
         'rate_card': {},
         'notes_hasna': s(r[8]) if len(r) > 8 else '',

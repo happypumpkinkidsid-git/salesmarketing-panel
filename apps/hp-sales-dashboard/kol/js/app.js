@@ -8,6 +8,8 @@ const BUDGET_CEILING = 15_000_000;        // Rp 15jt / month
 const DECISIONS = ['', 'Approve', 'Hold', 'Defer', 'Disapprove'];
 const STATUSES  = ['KANDIDAT','PENDING','HOLD','NEGOSIASI','DEAL','BARTER','SELESAI','CANCEL'];
 const BRIEFS    = ['', 'Soft-selling', 'Mid-selling', 'Hard-selling'];
+const CONTENT_STYLES = [['','— (auto)'],['Educational','Educational / tips'],['Fashion','Fashion / OOTD'],['Baby','Baby / Newborn'],['Sleep','Sleep / Bedtime'],['FamilyVlog','Family-Vlog'],['Mom','Mom / Lifestyle']];
+const FAMILY_SIT     = ['', 'Solo', 'Sibling', 'Twins'];
 const RATE_FORMATS = [
   ['reels','Reels'], ['vt','Video / VT'], ['story','Story'],
   ['owning','Owning / Mention'], ['keranjang','Keranjang Kuning'], ['taplink','Taplink'],
@@ -282,6 +284,17 @@ function openDrawer(id) {
           <input type="text" value="${esc(k.produk||'')}" onchange="patchField('${id}','produk',this.value)"></label>
       </div>
 
+      <div class="dr-grid" style="margin-top:11px">
+        <label>Content Style <span class="dr-hint">consideration</span>
+          <select onchange="patchConsideration('${id}','content_style',this.value)">
+            ${CONTENT_STYLES.map(([v,l]) => `<option value="${v}" ${v===(k.content_style||'')?'selected':''}>${l}</option>`).join('')}
+          </select></label>
+        <label>Family
+          <select onchange="patchConsideration('${id}','family_situation',this.value)">
+            ${FAMILY_SIT.map(v => `<option value="${v}" ${v===(k.family_situation||'')?'selected':''}>${v||'— (auto)'}</option>`).join('')}
+          </select></label>
+      </div>
+
       ${rec ? `
       <div class="fit-card">
         <div class="fit-head">
@@ -289,13 +302,13 @@ function openDrawer(id) {
           <span class="fit-sub">inferensi dari profil — kamu tetap yang putuskan</span>
         </div>
         <div class="fit-tags">
-          <span class="fit-tag">${esc(rec.contentLabel)}</span>
-          ${rec.family !== 'Solo' ? `<span class="fit-tag fit-fam">${rec.family === 'Twins' ? '👯 Twins' : '👫 Sibling'}</span>` : ''}
+          <span class="fit-tag">${esc(rec.contentLabel)}${rec.styleInferred ? ' <span class="fit-auto">auto</span>' : ' <span class="fit-set">set</span>'}</span>
+          ${rec.family !== 'Solo' ? `<span class="fit-tag fit-fam">${rec.family === 'Twins' ? '👯 Twins' : '👫 Sibling'}${rec.familyInferred ? ' <span class="fit-auto">auto</span>' : ''}</span>` : ''}
           <span class="fit-tag fit-trig">${esc(rec.trigger)}</span>
         </div>
         <div class="fit-row">
           <span class="fit-k">Brief disarankan</span>
-          <span class="fit-v"><b>${esc(rec.briefType)}</b> <span class="muted">(${esc(rec.briefRange)})</span>
+          <span class="fit-v"><b>${esc(rec.briefType)}</b> <span class="muted">· ${esc(rec.briefBasis)}</span>
             ${rec.briefType !== k.brief_type ? `<button class="fit-apply" onclick="applyFit('${id}','brief_type','${esc(rec.briefType)}')">pakai</button>` : '<span class="fit-ok">✓ cocok</span>'}</span>
         </div>
         <div class="fit-row">
@@ -400,6 +413,11 @@ function renderNegList(negs) {
 async function patchField(id, field, val) {
   await KOLStore.patchKOL(id, { [field]: val });
   renderKPIs(); renderLatestUpdate(); renderJuni(); renderTracker(); renderPool();
+}
+// set a consideration field (content_style / family_situation) → recompute Creative Fit
+async function patchConsideration(id, field, val) {
+  await KOLStore.patchKOL(id, { [field]: val });
+  openDrawer(id); renderTracker();
 }
 // apply a Creative Fit suggestion into a field
 async function applyFit(id, field, val) {
