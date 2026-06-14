@@ -246,6 +246,7 @@ function openDrawer(id) {
   const rc = k.rate_card || {};
   const pkg = RATE_FORMATS.reduce((s, [key]) => s + (Number(rc[key]) || 0), 0);
   const negs = KOLStore.negotiationsFor(id);
+  const rec = (window.KOL_INTEL) ? KOL_INTEL.recommendFor(k) : null;
 
   $('#drawer').innerHTML = `
     <div class="dr-head">
@@ -280,6 +281,36 @@ function openDrawer(id) {
         <label>Produk / Koleksi
           <input type="text" value="${esc(k.produk||'')}" onchange="patchField('${id}','produk',this.value)"></label>
       </div>
+
+      ${rec ? `
+      <div class="fit-card">
+        <div class="fit-head">
+          <span class="fit-kicker">✦ Creative Fit</span>
+          <span class="fit-sub">inferensi dari profil — kamu tetap yang putuskan</span>
+        </div>
+        <div class="fit-tags">
+          <span class="fit-tag">${esc(rec.contentLabel)}</span>
+          ${rec.family !== 'Solo' ? `<span class="fit-tag fit-fam">${rec.family === 'Twins' ? '👯 Twins' : '👫 Sibling'}</span>` : ''}
+          <span class="fit-tag fit-trig">${esc(rec.trigger)}</span>
+        </div>
+        <div class="fit-row">
+          <span class="fit-k">Brief disarankan</span>
+          <span class="fit-v"><b>${esc(rec.briefType)}</b> <span class="muted">(${esc(rec.briefRange)})</span>
+            ${rec.briefType !== k.brief_type ? `<button class="fit-apply" onclick="applyFit('${id}','brief_type','${esc(rec.briefType)}')">pakai</button>` : '<span class="fit-ok">✓ cocok</span>'}</span>
+        </div>
+        <div class="fit-row">
+          <span class="fit-k">Produk paling klop</span>
+          <span class="fit-v">${rec.products.slice(0,4).map(p => `<span class="fit-prod">${esc(p)}</span>`).join('')}
+            <button class="fit-apply" onclick="applyFit('${id}','produk',${JSON.stringify(rec.products.slice(0,4).join(', '))})">pakai</button></span>
+        </div>
+        <div class="fit-row">
+          <span class="fit-k">Arah angle</span>
+          <span class="fit-v">${esc(rec.angle)}</span>
+        </div>
+        <details class="fit-why"><summary>kenapa?</summary>
+          <ul>${rec.rationale.map(r => `<li>${r.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</li>`).join('')}</ul>
+        </details>
+      </div>` : ''}
 
       <label class="dr-full">Angle / Tema Utama
         <textarea rows="2" onchange="patchField('${id}','angle',this.value)">${esc(k.angle||'')}</textarea></label>
@@ -369,6 +400,12 @@ function renderNegList(negs) {
 async function patchField(id, field, val) {
   await KOLStore.patchKOL(id, { [field]: val });
   renderKPIs(); renderLatestUpdate(); renderJuni(); renderTracker(); renderPool();
+}
+// apply a Creative Fit suggestion into a field
+async function applyFit(id, field, val) {
+  await KOLStore.patchKOL(id, { [field]: val });
+  toast(`✦ ${field === 'brief_type' ? 'Brief' : 'Produk'} diterapkan: ${val}`);
+  openDrawer(id); renderTracker(); renderJuni();
 }
 async function patchDecision(id, val) {
   const patch = { decision: val };

@@ -175,3 +175,24 @@ tbody tr:last-child td{border-bottom:none}
   .dr-grid,.dr-rates{grid-template-columns:1fr}
   .kpi-budget{grid-column:span 1}
 }
+
+/* ── Creative Fit panel (consideration layer) ── */
+.fit-card{margin-top:14px;background:linear-gradient(135deg,#fff7f0,#fdf2f8);border:1px solid #f3d9c4;border-radius:11px;padding:13px 14px}
+.fit-head{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
+.fit-kicker{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--orange);text-transform:none}
+.fit-sub{font-size:10.5px;color:var(--muted);font-weight:500}
+.fit-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.fit-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:#fff;border:1px solid #ecd6c2;color:#7a4a2a}
+.fit-tag.fit-fam{background:#eef0fb;border-color:#d6dcf5;color:#46509a}
+.fit-tag.fit-trig{background:#eafaf2;border-color:#cdeadd;color:#1f7a55}
+.fit-row{display:flex;gap:10px;font-size:12.5px;padding:5px 0;border-top:1px dashed #f0ddcb;align-items:baseline}
+.fit-k{flex:0 0 110px;color:var(--muted);font-weight:600;font-size:11.5px}
+.fit-v{flex:1;color:var(--ink);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.fit-prod{font-size:11px;font-weight:700;background:#fff;border:1px solid #e7eaf0;border-radius:6px;padding:2px 7px}
+.fit-apply{font-size:10.5px;font-weight:700;border:none;background:var(--orange);color:#fff;border-radius:5px;padding:3px 9px;cursor:pointer}
+.fit-apply:hover{filter:brightness(.95)}
+.fit-ok{font-size:11px;color:var(--green);font-weight:700}
+.fit-why{margin-top:8px}
+.fit-why summary{font-size:11px;font-weight:700;color:var(--orange);cursor:pointer}
+.fit-why ul{margin:7px 0 0 16px;padding:0}
+.fit-why li{font-size:11.5px;color:#4a5468;line-height:1.5;margin-bottom:3px}
