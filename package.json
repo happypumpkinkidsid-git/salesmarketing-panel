@@ -4,7 +4,9 @@
   "private": true,
   "description": "Happy Pumpkin web dashboards monorepo (KOL Command Center + sales + creative hub)",
   "scripts": {
-    "dev": "netlify dev"
+    "dev": "netlify dev",
+    "deploy": "netlify deploy --prod --build",
+    "sync": "/tmp/kol-venv/bin/python scripts/sync-sheets.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"
