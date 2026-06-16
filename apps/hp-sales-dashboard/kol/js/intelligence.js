@@ -86,7 +86,11 @@
     for (const c of db.collections) {
       let score = 0;
       for (const kw of (c.keywordCloud || [])) if (t.includes(String(kw).toLowerCase())) score++;
-      if (c.name && t.includes(c.name.toLowerCase())) score += 2;       // explicit name mention
+      // cleaned collection name (drop ™ and "(…)") — catches product-name mentions
+      const cleanName = c.name.toLowerCase().replace(/™/g, '').replace(/\s*\(.*?\)\s*/g, '').trim();
+      if (cleanName && t.includes(cleanName)) score += 3;
+      // explicit article (SKU) name mention
+      for (const a of (c.articles || [])) if (a.name && t.includes(String(a.name).toLowerCase())) score += 2;
       if (score > bestScore) { bestScore = score; best = c; }
     }
     if (!best) return null;
