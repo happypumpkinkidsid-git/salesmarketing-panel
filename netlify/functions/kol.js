@@ -17,18 +17,26 @@ const { createClient } = require('@supabase/supabase-js');
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Content-Type': 'application/json',
-};
-
-function reply(statusCode, body) {
-  return { statusCode, headers: CORS, body: JSON.stringify(body) };
+// Lock CORS to the site origin (+ localhost dev). Same-origin app calls are
+// unaffected; this blocks other websites from browser-calling this endpoint.
+const ALLOWED = [
+  'https://hpsalesadmin.netlify.app',
+  'http://localhost:8888', 'http://localhost:8091',
+];
+function corsFor(event) {
+  const origin = (event.headers && (event.headers.origin || event.headers.Origin)) || '';
+  const ok = ALLOWED.includes(origin) || /^https:\/\/[a-z0-9-]+--hpsalesadmin\.netlify\.app$/.test(origin);
+  return {
+    'Access-Control-Allow-Origin': ok ? origin : ALLOWED[0],
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Content-Type': 'application/json',
+  };
 }
 
 exports.handler = async (event) => {
+  const CORS = corsFor(event);
+  const reply = (statusCode, body) => ({ statusCode, headers: CORS, body: JSON.stringify(body) });
   if (event.httpMethod === 'OPTIONS') return reply(200, {});
 
   // If env not configured, tell the client to fall back to localStorage.

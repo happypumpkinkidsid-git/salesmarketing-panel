@@ -40,6 +40,13 @@ window.addEventListener('DOMContentLoaded', () => {
   updateTopbarSub();
   loadAllData();
   setInterval(loadAllData, CONFIG.refreshInterval);
+  // deep-link: open the section named in the URL hash (e.g. /#product-database)
+  const h = (location.hash || '').slice(1);
+  if (h && document.querySelector(`.nav-item[data-section="${h}"]`)) navigate(h);
+});
+window.addEventListener('hashchange', () => {
+  const h = (location.hash || '').slice(1);
+  if (h && state.section !== h && document.querySelector(`.nav-item[data-section="${h}"]`)) navigate(h);
 });
 
 function setupNav() {
@@ -50,6 +57,7 @@ function setupNav() {
 
 function navigate(sec) {
   state.section = sec;
+  try { if ((location.hash || '').slice(1) !== sec) history.replaceState(null, '', '#' + sec); } catch (e) {}
   document.querySelectorAll('.nav-item[data-section]').forEach(el =>
     el.classList.toggle('active', el.dataset.section === sec)
   );
