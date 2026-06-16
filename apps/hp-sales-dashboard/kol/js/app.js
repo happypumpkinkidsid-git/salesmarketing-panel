@@ -329,6 +329,7 @@ function openDrawer(id) {
         <details class="fit-why"><summary>kenapa?</summary>
           <ul>${rec.rationale.map(r => `<li>${r.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</li>`).join('')}</ul>
         </details>
+        <button class="fit-brief-btn" onclick="openBriefHandoff('${id}')">✦ Buat Brief di Generator →</button>
       </div>` : ''}
 
       <label class="dr-full">Angle / Tema Utama
@@ -425,6 +426,25 @@ async function patchConsideration(id, field, val) {
   await KOLStore.patchKOL(id, { [field]: val });
   openDrawer(id); renderTracker();
 }
+// hand off to the dashboard's Brief Generator, pre-filled
+function openBriefHandoff(id) {
+  const k = KOLStore.kolById(id); if (!k) return;
+  const rec = (window.KOL_INTEL) ? KOL_INTEL.recommendFor(k) : {};
+  const payload = {
+    handle: k.handle,
+    niche: k.niche || (rec.contentLabel || ''),
+    notes: [k.angle, k.notes_hasna].filter(Boolean).join(' — '),
+    briefType: k.brief_type || rec.briefType || '',
+    collection: rec.collection ? rec.collection.id : '',
+  };
+  if (window.parent && window.parent !== window && typeof window.parent.hpOpenBrief === 'function') {
+    window.parent.hpOpenBrief(payload);
+  } else {
+    try { sessionStorage.setItem('hp_brief_payload', JSON.stringify(payload)); } catch (e) {}
+    window.open('../index.html#kol', '_blank');
+  }
+}
+
 // apply a Creative Fit suggestion into a field
 async function applyFit(id, field, val) {
   await KOLStore.patchKOL(id, { [field]: val });

@@ -2860,6 +2860,26 @@ function kolFilteredData() {
   });
 }
 
+// ── Handoff: Command Center (iframe) → Brief Generator, pre-filled ──
+window.hpOpenBrief = function (p) {
+  p = p || {};
+  navigate('kol');
+  setTimeout(() => {
+    const ig = document.getElementById('kb_ig');
+    if (ig && p.handle) { ig.value = String(p.handle).replace(/^@/, ''); try { kolHandleUsernameInput(ig.value); } catch (e) {} }
+    const niche = document.getElementById('kb_niche');
+    if (niche && p.niche) { niche.value = p.niche; try { kolUpdateNicheHelper(p.niche); } catch (e) {} }
+    const notes = document.getElementById('kb_notes');
+    if (notes && p.notes) notes.value = p.notes;
+    if (p.briefType) { const tk = { 'Soft-selling': 'soft', 'Mid-selling': 'mid', 'Hard-selling': 'hard' }[p.briefType]; if (tk) try { kolSelectTier(tk); } catch (e) {} }
+    if (p.collection) { const cb = document.querySelector(`input[name="kb_collections"][value="${p.collection}"]`); if (cb) cb.checked = true; }
+    const hk = document.getElementById('kb_hook');
+    if (hk && p.hook) hk.value = p.hook;
+    try { showToast('✦ Brief di-prefill dari Command Center'); } catch (e) {}
+    window.scrollTo(0, 0);
+  }, 280);
+};
+
 // ── Product Database (shared knowledge base) ──────────────────
 const pdbState   = { i: 0, lang: 'id' };
 const PDB_COLORS = { pureknit:'#5A4A8C', ultracool:'#2E7DAF', active:'#4A8C6F', knitfashion:'#B8527A',
