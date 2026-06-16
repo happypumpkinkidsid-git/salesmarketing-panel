@@ -1672,13 +1672,17 @@ function renderKOLBrief() {
           <div class="kol-block-num">03</div>
           <div class="kol-block-body">
             <label class="kol-lbl">Produk / Koleksi</label>
-            <div style="margin-bottom:12px">
-              <div class="kol-sub-lbl" style="margin-bottom:5px">Koleksi (Knowledge Base)</div>
-              <select class="kol-inp" id="kb_collection" style="width:auto;max-width:300px">
-                <option value="">— pilih koleksi —</option>
-                ${(window.HP_PRODUCT_DB?.collections || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
-              </select>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Brief memakai story / show / hooks dari Product Database untuk koleksi ini.</div>
+            <div style="margin-bottom:14px">
+              <div class="kol-sub-lbl" style="margin-bottom:5px">Koleksi (Knowledge Base) — bisa pilih lebih dari satu</div>
+              <div class="kol-prod-row">
+                ${(window.HP_PRODUCT_DB?.collections || []).map(c => `
+                  <label class="kol-prod-chip">
+                    <input type="checkbox" name="kb_collections" value="${c.id}">
+                    <span class="kol-prod-name">${c.name}</span>
+                    <span class="kol-prod-type">${(c.kicker && (c.kicker.id || c.kicker.en)) || ''}</span>
+                  </label>`).join('')}
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Brief memakai story / show / hooks dari Product Database untuk tiap koleksi terpilih.</div>
             </div>
             <div class="kol-prod-row">
               ${Object.entries(HP_PRODUCTS_DB).map(([name, p]) => `
@@ -1805,13 +1809,13 @@ function generateKOLBrief() {
   const nicheText= (document.getElementById('kb_niche')?.value || '').trim();
   const notes    = (document.getElementById('kb_notes')?.value || '').trim();
   const tiktok   = document.getElementById('kb_tiktok')?.checked || false;
-  const collectionId = (document.getElementById('kb_collection')?.value || '').trim();
+  const collectionIds = [...document.querySelectorAll('input[name="kb_collections"]:checked')].map(el => el.value);
 
   if (!hook)         { showToast('Angle / tema wajib diisi ya!'); return; }
   if (!prods.length) { showToast('Pilih minimal 1 produk!');      return; }
 
   const data = { handle, slug, tier, tierKey, prods, month, hook, cashFee, barter, refUrl,
-                 pic, picWa, nicheText, notes, tiktok, collectionId };
+                 pic, picWa, nicheText, notes, tiktok, collectionIds };
   const briefHtml = kolBuildBriefHTML(data);
 
   window._kolBriefHtml   = briefHtml;
@@ -1933,16 +1937,18 @@ function kolBuildBriefHTML(d) {
       <span style="font-size:13px;color:#1F2140;font-weight:600;line-height:1.4">${v}${sub ? `<span style="display:block;font-weight:500;color:#5A5C75;font-size:11.5px;margin-top:2px">${sub}</span>` : ''}</span>
     </div>`;
 
-  // KB collection block (sourced from shared HP_PRODUCT_DB) — Indonesian
+  // KB collection blocks (sourced from shared HP_PRODUCT_DB) — Indonesian; one per selected collection
   let kbBlock = '';
-  if (d.collectionId && window.HP_PRODUCT_DB) {
-    const col = (window.HP_PRODUCT_DB.collections || []).find(c => c.id === d.collectionId);
-    if (col) {
-      const ID = o => (o && (o.id || o.en)) || '';
+  const kbIds = d.collectionIds || (d.collectionId ? [d.collectionId] : []);
+  if (kbIds.length && window.HP_PRODUCT_DB) {
+    const ID = o => (o && (o.id || o.en)) || '';
+    const bullets = (arr, clr) => (arr || []).map(it =>
+      `<div style="display:grid;grid-template-columns:14px 1fr;gap:7px;font-size:11.5px;line-height:1.45;margin-bottom:5px;color:#3a4254"><span style="color:${clr};font-weight:800">›</span><span>${ID(it)}</span></div>`).join('');
+    kbBlock = kbIds.map(cid => {
+      const col = (window.HP_PRODUCT_DB.collections || []).find(c => c.id === cid);
+      if (!col) return '';
       const colColor = (typeof PDB_COLORS !== 'undefined' && PDB_COLORS[col.id]) || tier.color;
-      const bullets = (arr, clr) => (arr || []).map(it =>
-        `<div style="display:grid;grid-template-columns:14px 1fr;gap:7px;font-size:11.5px;line-height:1.45;margin-bottom:5px;color:#3a4254"><span style="color:${clr};font-weight:800">›</span><span>${ID(it)}</span></div>`).join('');
-      kbBlock = `
+      return `
       <div style="margin-top:14px;background:#FDFAF5;border:1.5px solid #E8E3D6;border-top:3px solid ${colColor};border-radius:10px;padding:13px 15px">
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
           <span style="font-weight:800;font-size:13.5px;color:${colColor}">📚 ${col.name}</span>
@@ -1956,7 +1962,7 @@ function kolBuildBriefHTML(d) {
         ${lc('Hooks — Opener', colColor)}${(col.hooks || []).map(h => `<div style="font-size:11.5px;font-weight:600;background:#fff;border:1px solid #E8E3D6;border-radius:7px;padding:6px 10px;margin-bottom:5px;color:#1F2140">"${ID(h)}"</div>`).join('')}
         <div style="font-size:11px;font-weight:600;color:${colColor};margin-top:8px">${col.hashtags}</div>
       </div>`;
-    }
+    }).join('');
   }
 
   const PAGE_CSS = `
