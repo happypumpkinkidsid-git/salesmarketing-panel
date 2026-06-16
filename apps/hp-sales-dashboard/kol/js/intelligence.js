@@ -77,6 +77,23 @@
     return 'Solo';
   }
 
+  // ── match a KB collection by keyword overlap (shared HP_PRODUCT_DB) ──────────
+  function recommendCollection(signal) {
+    const db = (typeof window !== 'undefined') ? window.HP_PRODUCT_DB : (typeof global !== 'undefined' ? global.HP_PRODUCT_DB : null);
+    if (!db || !db.collections) return null;
+    const t = (signal || '').toLowerCase();
+    let best = null, bestScore = 0;
+    for (const c of db.collections) {
+      let score = 0;
+      for (const kw of (c.keywordCloud || [])) if (t.includes(String(kw).toLowerCase())) score++;
+      if (c.name && t.includes(c.name.toLowerCase())) score += 2;       // explicit name mention
+      if (score > bestScore) { bestScore = score; best = c; }
+    }
+    if (!best) return null;
+    const hook = (best.hooks && best.hooks[0]) ? best.hooks[0] : null;
+    return { id: best.id, name: best.name, score: bestScore, hookId: hook ? hook.id : '', hookEn: hook ? hook.en : '' };
+  }
+
   // ── recommendFor: the engine ────────────────────────────────────────────────
   function recommendFor(kol) {
     const signal = [kol.niche, kol.angle, kol.notes_hasna, kol.produk, kol.scope, kol.internal_notes]
@@ -120,6 +137,7 @@
       contentStyle: style, contentLabel: prof.label, family,
       styleInferred: !styleSet, familyInferred: !familySet,
       briefType, briefRange: prof.brief, briefBasis,
+      collection: recommendCollection(signal),
       products, leadProduct,
       angle: prof.angle, trigger: prof.trigger, audience: prof.audience,
       familyNote, rationale,
@@ -137,6 +155,6 @@
 
   g.KOL_INTEL = {
     PRODUCT_PLAYBOOK, CREATOR_PROFILES,
-    recommendFor, inferContentStyle, inferFamily, productKeys, mapMode,
+    recommendFor, recommendCollection, inferContentStyle, inferFamily, productKeys, mapMode,
   };
 })(window);

@@ -65,6 +65,7 @@ function navigate(sec) {
     leads:       ['Leads Pipeline',          'Potential & qualified distributor leads'],
     kol:         ['KOL Brief Generator',     'Buat brief kolaborasi untuk influencer & KOL'],
     'kol-program':['KOL Command Center',     'Keputusan, rate card, negosiasi & pool — satu tempat'],
+    'product-database':['Product Database',   'Knowledge base bersama — dibaca Brief Generator & Command Center'],
     inventory:   ['Inventory & Stock',       'Live stock levels and reorder alerts'],
     sessions:    ['Live Sessions',           'Shopee & TikTok live session tracking'],
     orders:      ['Order Operations',        'Fulfilment status and SLA monitoring'],
@@ -87,6 +88,7 @@ function renderSection(sec) {
   if (sec === 'leads')       renderLeads();
   if (sec === 'kol')         renderKOLBrief();
   if (sec === 'kol-program') renderKOLCommandCenter();
+  if (sec === 'product-database') renderProductDatabase();
   if (sec === 'inventory')   renderInventoryLocked();
   if (sec === 'sessions')    renderSessionsLocked();
   if (sec === 'orders')      renderOrdersLocked();
@@ -1670,6 +1672,14 @@ function renderKOLBrief() {
           <div class="kol-block-num">03</div>
           <div class="kol-block-body">
             <label class="kol-lbl">Produk / Koleksi</label>
+            <div style="margin-bottom:12px">
+              <div class="kol-sub-lbl" style="margin-bottom:5px">Koleksi (Knowledge Base)</div>
+              <select class="kol-inp" id="kb_collection" style="width:auto;max-width:300px">
+                <option value="">— pilih koleksi —</option>
+                ${(window.HP_PRODUCT_DB?.collections || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+              </select>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Brief memakai story / show / hooks dari Product Database untuk koleksi ini.</div>
+            </div>
             <div class="kol-prod-row">
               ${Object.entries(HP_PRODUCTS_DB).map(([name, p]) => `
                 <label class="kol-prod-chip">
@@ -1795,12 +1805,13 @@ function generateKOLBrief() {
   const nicheText= (document.getElementById('kb_niche')?.value || '').trim();
   const notes    = (document.getElementById('kb_notes')?.value || '').trim();
   const tiktok   = document.getElementById('kb_tiktok')?.checked || false;
+  const collectionId = (document.getElementById('kb_collection')?.value || '').trim();
 
   if (!hook)         { showToast('Angle / tema wajib diisi ya!'); return; }
   if (!prods.length) { showToast('Pilih minimal 1 produk!');      return; }
 
   const data = { handle, slug, tier, tierKey, prods, month, hook, cashFee, barter, refUrl,
-                 pic, picWa, nicheText, notes, tiktok };
+                 pic, picWa, nicheText, notes, tiktok, collectionId };
   const briefHtml = kolBuildBriefHTML(data);
 
   window._kolBriefHtml   = briefHtml;
@@ -1922,6 +1933,32 @@ function kolBuildBriefHTML(d) {
       <span style="font-size:13px;color:#1F2140;font-weight:600;line-height:1.4">${v}${sub ? `<span style="display:block;font-weight:500;color:#5A5C75;font-size:11.5px;margin-top:2px">${sub}</span>` : ''}</span>
     </div>`;
 
+  // KB collection block (sourced from shared HP_PRODUCT_DB) — Indonesian
+  let kbBlock = '';
+  if (d.collectionId && window.HP_PRODUCT_DB) {
+    const col = (window.HP_PRODUCT_DB.collections || []).find(c => c.id === d.collectionId);
+    if (col) {
+      const ID = o => (o && (o.id || o.en)) || '';
+      const colColor = (typeof PDB_COLORS !== 'undefined' && PDB_COLORS[col.id]) || tier.color;
+      const bullets = (arr, clr) => (arr || []).map(it =>
+        `<div style="display:grid;grid-template-columns:14px 1fr;gap:7px;font-size:11.5px;line-height:1.45;margin-bottom:5px;color:#3a4254"><span style="color:${clr};font-weight:800">›</span><span>${ID(it)}</span></div>`).join('');
+      kbBlock = `
+      <div style="margin-top:14px;background:#FDFAF5;border:1.5px solid #E8E3D6;border-top:3px solid ${colColor};border-radius:10px;padding:13px 15px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
+          <span style="font-weight:800;font-size:13.5px;color:${colColor}">📚 ${col.name}</span>
+          <span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8A8CA0;font-weight:700">Knowledge Base</span>
+        </div>
+        <div style="font-size:11.5px;font-style:italic;color:#5A5C75;margin-bottom:8px">${ID(col.oneLiner)}</div>
+        <div style="font-size:11px;background:#fff;border:1px solid #E8E3D6;border-left:3px solid ${colColor};border-radius:8px;padding:8px 10px;margin-bottom:10px;color:#3a4254"><b>Material:</b> ${ID(col.material)}</div>
+        ${lc('Say — Story / USP', '#2E6A5E')}${bullets(col.say, '#2E6A5E')}
+        ${lc('Show — Yang Difilmkan', '#2b6fd6')}${bullets(col.show, '#2b6fd6')}
+        ${lc('Avoid', '#C9412A')}${bullets(col.avoid, '#C9412A')}
+        ${lc('Hooks — Opener', colColor)}${(col.hooks || []).map(h => `<div style="font-size:11.5px;font-weight:600;background:#fff;border:1px solid #E8E3D6;border-radius:7px;padding:6px 10px;margin-bottom:5px;color:#1F2140">"${ID(h)}"</div>`).join('')}
+        <div style="font-size:11px;font-weight:600;color:${colColor};margin-top:8px">${col.hashtags}</div>
+      </div>`;
+    }
+  }
+
   const PAGE_CSS = `
 *{box-sizing:border-box}
 html,body{background:#d9d6cd;margin:0;padding:0;font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -2034,6 +2071,7 @@ html,body{background:#d9d6cd;margin:0;padding:0;font-family:"Plus Jakarta Sans",
     <div>
       ${lc('USP Produk — Talking Points')}
       <div style="display:grid;grid-template-columns:${prodCols};gap:11px">${prodCards}</div>
+      ${kbBlock}
     </div>
 
     <!-- Trust signals -->
@@ -2806,6 +2844,94 @@ function kolFilteredData() {
     }
     return true;
   });
+}
+
+// ── Product Database (shared knowledge base) ──────────────────
+const pdbState   = { i: 0, lang: 'id' };
+const PDB_COLORS = { pureknit:'#5A4A8C', ultracool:'#2E7DAF', active:'#4A8C6F', knitfashion:'#B8527A',
+  woven:'#9A6A3C', play:'#E08A1E', basic:'#64748B', denim:'#3B5C8A', sleep:'#7A52CC',
+  breathe:'#2E9D8A', softair:'#5BA8C9', batik:'#A8543A', raya:'#C0942A' };
+
+function pdbGroup(label, arr, lang, color, copy) {
+  if (!arr || !arr.length) return '';
+  const L = o => (o && (o[lang] || o.en)) || '';
+  return `<div class="pdb-group"><div class="pdb-glabel" style="color:${color}">${label}</div>
+    <ul class="pdb-glist${copy ? ' pdb-copy' : ''}">${arr.map(it => `<li>${L(it)}</li>`).join('')}</ul></div>`;
+}
+function pdbSelect(i) { pdbState.i = i; renderProductDatabase(); }
+function pdbLang(l)   { pdbState.lang = l; renderProductDatabase(); }
+
+function renderProductDatabase() {
+  const el = document.getElementById('section-product-database');
+  if (!el) return;
+  const db = window.HP_PRODUCT_DB;
+  if (!db || !db.collections) { el.innerHTML = '<div style="padding:24px;color:var(--text-muted)">Product Database belum termuat.</div>'; return; }
+  const lang = pdbState.lang;
+  const L = o => (o && (o[lang] || o.en)) || '';
+  const cols = db.collections;
+  if (pdbState.i >= cols.length) pdbState.i = 0;
+  const c = cols[pdbState.i];
+  const color = PDB_COLORS[c.id] || 'var(--primary)';
+
+  el.innerHTML = `
+    <div class="pdb" style="--accent:${color}">
+      <div class="pdb-top">
+        <div>
+          <div class="pdb-eyebrow">Shared Knowledge Base · v${db.version}</div>
+          <div class="pdb-h1">Product Database</div>
+          <div class="pdb-purpose">${db.purpose}</div>
+          <div class="pdb-srcnote">📚 Sumber tunggal yang dibaca KOL Brief Generator &amp; KOL Command Center.</div>
+        </div>
+        <div class="pdb-lang">
+          <button class="pdb-langbtn ${lang === 'en' ? 'active' : ''}" onclick="pdbLang('en')">EN</button>
+          <button class="pdb-langbtn ${lang === 'id' ? 'active' : ''}" onclick="pdbLang('id')">ID</button>
+        </div>
+      </div>
+
+      <details class="pdb-rules">
+        <summary>House Rules &amp; Selling-Point Ratio</summary>
+        <ul class="pdb-ruleslist">${db.houseRules.map(r => `<li>${r}</li>`).join('')}</ul>
+        <div class="pdb-ratio">
+          <div><b>Fashion-forward:</b> ${db.sellingPointRatio.fashionForward}</div>
+          <div><b>Essentials &amp; babywear:</b> ${db.sellingPointRatio.essentialsAndBabywear}</div>
+        </div>
+      </details>
+
+      <div class="pdb-body">
+        <div class="pdb-rail">
+          ${cols.map((cc, idx) => `
+            <button class="pdb-railitem ${idx === pdbState.i ? 'active' : ''}" style="--c:${PDB_COLORS[cc.id] || '#888'}" onclick="pdbSelect(${idx})">
+              <span class="pdb-dot"></span>
+              <span class="pdb-railtext"><span class="pdb-railname">${cc.name}</span><span class="pdb-railkick">${L(cc.kicker)}</span></span>
+            </button>`).join('')}
+        </div>
+
+        <div class="pdb-detail">
+          <div class="pdb-kick" style="color:${color}">${L(c.kicker)}</div>
+          <div class="pdb-name">${c.name}</div>
+          <div class="pdb-one">${L(c.oneLiner)}</div>
+          <div class="pdb-metarow">${c.meta.map(m => `<span class="pdb-m">${m}</span>`).join('')}</div>
+          <div class="pdb-material"><span class="pdb-matlabel">Material</span> ${L(c.material)}</div>
+          ${pdbGroup('Say — product story / USP', c.say, lang, '#1f9d6b')}
+          ${pdbGroup('Show — what to film', c.show, lang, '#2b6fd6')}
+          ${pdbGroup('Avoid', c.avoid, lang, '#d64545')}
+          ${pdbGroup('Hooks — opener lines (copy-paste)', c.hooks, lang, color, true)}
+          <div class="pdb-hashtags">${c.hashtags}</div>
+          <div class="pdb-cloud">${c.keywordCloud.map(k => `<span style="font-size:${11 + (k.length % 3) * 2}px">${k}</span>`).join('')}</div>
+          <details class="pdb-articles">
+            <summary>Articles in this collection (${c.articles.length}) — internal reference</summary>
+            <div class="pdb-artnote">Internal reference — confirm live stock &amp; price before quoting.</div>
+            ${c.articles.length ? c.articles.map(a => `
+              <div class="pdb-artrow">
+                <span class="pdb-artname">${a.name}</span>
+                <span class="pdb-artchip">${a.gender}</span>
+                <span class="pdb-artchip">${a.colors} warna</span>
+                <span class="pdb-artprice">${a.price || '—'}</span>
+              </div>`).join('') : '<div class="pdb-artnote">Belum ada artikel terdaftar.</div>'}
+          </details>
+        </div>
+      </div>
+    </div>`;
 }
 
 // ── KOL Command Center (embedded full app at /kol) ────────────

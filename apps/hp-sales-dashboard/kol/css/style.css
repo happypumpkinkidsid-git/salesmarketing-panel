@@ -199,3 +199,4 @@ tbody tr:last-child td{border-bottom:none}
 .dr-hint{font-size:9px;font-weight:600;color:var(--orange);background:var(--orange-soft);padding:1px 5px;border-radius:4px;margin-left:5px;letter-spacing:0;text-transform:none}
 .fit-auto{font-size:8.5px;font-weight:700;background:#eceff4;color:#8b94a6;padding:1px 4px;border-radius:3px;vertical-align:middle}
 .fit-set{font-size:8.5px;font-weight:700;background:#e6f6ef;color:var(--green);padding:1px 4px;border-radius:3px;vertical-align:middle}
+.fit-kbhook{display:block;font-size:11.5px;font-style:italic;color:#4a5468;margin-top:2px}

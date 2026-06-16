@@ -320,6 +320,12 @@ function openDrawer(id) {
           <span class="fit-k">Arah angle</span>
           <span class="fit-v">${esc(rec.angle)}</span>
         </div>
+        ${rec.collection ? `
+        <div class="fit-row">
+          <span class="fit-k">Koleksi KB</span>
+          <span class="fit-v"><b>${esc(rec.collection.name)}</b>
+            ${rec.collection.hookEn ? `<span class="fit-kbhook">“${esc(rec.collection.hookEn)}”</span>` : ''}</span>
+        </div>` : ''}
         <details class="fit-why"><summary>kenapa?</summary>
           <ul>${rec.rationale.map(r => `<li>${r.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</li>`).join('')}</ul>
         </details>
