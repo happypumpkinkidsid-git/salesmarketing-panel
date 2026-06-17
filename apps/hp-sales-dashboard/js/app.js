@@ -55,6 +55,11 @@ function setupNav() {
   });
 }
 
+// escape untrusted free-text (Sheet/Supabase/user data) before innerHTML
+function escHtml(s) {
+  return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
 function navigate(sec) {
   state.section = sec;
   try { if ((location.hash || '').slice(1) !== sec) history.replaceState(null, '', '#' + sec); } catch (e) {}
@@ -265,11 +270,7 @@ function renderBrief() {
   const todayTasks = state.brief.filter(t => t.day === todayName);
   const highCount  = todayTasks.filter(t => t.priority === 'High').length;
 
-  const sheetHint = !state.usingSheet ? `<div class="sheet-hint">
-    <strong>📋 Sample data active.</strong> Connect your Google Sheet to see real tasks.
-    Open <strong>js/config.js</strong> and replace <strong>YOUR_SHEET_ID_HERE</strong> with your Sheet ID.
-    Create a tab named <strong>Brief</strong> with columns: day | priority | task | category | channel
-  </div>` : '';
+  const sheetHint = !state.usingSheet ? `<div class="sheet-hint" style="font-size:12px;color:var(--text-muted)">Menampilkan data contoh — belum terhubung ke Google Sheet.</div>` : '';
 
   el.innerHTML = `
     ${sheetHint}
@@ -329,7 +330,7 @@ function renderTodayTasks(todayName, tasks) {
     <div class="task-item">
       <span class="${priClass(t.priority)}">${t.priority.slice(0,1)}</span>
       <div class="task-body">
-        <div class="task-text">${t.task}</div>
+        <div class="task-text">${escHtml(t.task)}</div>
         <div class="task-meta">
           <span class="task-channel">${t.channel}</span>
           <span class="task-channel">${t.category}</span>
@@ -395,7 +396,7 @@ function renderUpcomingEvents() {
   const chips = upcoming.map(e => `
     <div class="event-chip ${e.daysLeft <= 14 ? 'soon' : ''}">
       <div>
-        <div class="ev-date">${e.platform !== 'All' ? e.platform + ' · ' : ''}${e.name}</div>
+        <div class="ev-date">${e.platform !== 'All' ? e.platform + ' · ' : ''}${escHtml(e.name)}</div>
         <div class="ev-name">${new Date(e.date).toLocaleDateString('id-ID',{day:'numeric',month:'short'})}</div>
         <div class="ev-days">${e.daysLeft === 0 ? 'TODAY' : e.daysLeft + ' days'}</div>
       </div>
@@ -411,7 +412,7 @@ function showDayModal(day) {
   body.innerHTML = tasks.length
     ? tasks.map(t => `<div class="modal-row">
         <span class="mr-label"><span class="${priClass(t.priority)}">${t.priority}</span></span>
-        <div class="mr-val"><strong>${t.task}</strong><br><span style="font-size:11px;color:var(--text-muted)">${t.category} · ${t.channel}</span></div>
+        <div class="mr-val"><strong>${escHtml(t.task)}</strong><br><span style="font-size:11px;color:var(--text-muted)">${t.category} · ${t.channel}</span></div>
       </div>`).join('')
     : `<div class="empty-state"><div class="empty-icon">🌙</div><div class="empty-title">No tasks scheduled for ${day}</div></div>`;
   document.getElementById('leadModal').style.display = 'flex';
@@ -600,7 +601,7 @@ function renderChannelTable(rows) {
       <td style="color:var(--text-muted)">${fmtIDR(c.orders ? c.revenue/c.orders : 0)}</td>
       <td>${c.spend ? fmtIDR(c.spend) : '<span style="color:var(--text-muted)">—</span>'}</td>
       <td>${roasCell}</td>
-      <td style="font-size:12px;color:var(--text-muted);max-width:180px">${c.notes || ''}</td>
+      <td style="font-size:12px;color:var(--text-muted);max-width:180px">${escHtml(c.notes || '')}</td>
     </tr>`;
   }).join('');
   return `<div class="table-wrap"><table class="data-table">
@@ -768,7 +769,7 @@ function renderDistributorTable(rows) {
 
     return `<tr>
       <td>
-        <div class="dist-name-cell">${d.name}</div>
+        <div class="dist-name-cell">${escHtml(d.name)}</div>
         <div class="dist-type">${d.type}${consignBadge ? ' &nbsp;' + consignBadge : ''}</div>
       </td>
       <td>${d.city}<br><span style="font-size:11px;color:var(--text-muted)">${d.province}</span></td>
@@ -778,7 +779,7 @@ function renderDistributorTable(rows) {
       <td style="font-weight:700">${fmtIDR(d.monthly_target)}</td>
       <td>${since}</td>
       <td>${dsloHtml}</td>
-      <td>${d.contact_name || '—'}</td>
+      <td>${escHtml(d.contact_name || '—')}</td>
       <td>${waLink}</td>
     </tr>`;
   }).join('');
@@ -982,7 +983,7 @@ function renderKanban(leads) {
                 const days = daysAgo(l.last_contact);
                 const stale = !isFollowedUpThisWeek(l.name) && (days===null || days>7);
                 return `<div class="kanban-card${stale?' row-stale':''}" onclick="showLeadDetail('${safe}')">
-                  <div class="kc-name">${l.name}</div>
+                  <div class="kc-name">${escHtml(l.name)}</div>
                   <div class="kc-meta">${l.city||'—'} · ${l.type}</div>
                   ${l.potential_monthly ? `<div class="kc-val">~${fmtIDR(l.potential_monthly)}/mo</div>` : ''}
                   ${stale ? `<div class="kc-meta" style="color:var(--red)">⚠ ${days===null?'Never':''+days+'d ago'}</div>` : ''}
@@ -1048,7 +1049,7 @@ function renderCRMTable(leads) {
         <div class="fu-checkbox${isChecked ? ' checked' : ''}">${isChecked ? '✓' : ''}</div>
       </td>
       <td class="td-name" onclick="showLeadDetail('${safeName}')">
-        <div class="crm-name">${l.name}</div>
+        <div class="crm-name">${escHtml(l.name)}</div>
         <div class="crm-sub">
           ${l.contact_name ? `<span class="crm-pic">👤 ${l.contact_name}</span>` : ''}
           ${igHandle ? `<a href="https://instagram.com/${igHandle}" target="_blank" class="crm-ig" onclick="event.stopPropagation()">@${igHandle}</a>` : ''}
@@ -1106,16 +1107,16 @@ function showLeadDetail(name) {
     ? `<a href="https://wa.me/${l.contact_wa}" target="_blank" class="wa-btn" style="font-size:14px;padding:10px 20px;margin-bottom:16px;display:inline-flex">💬 Open WhatsApp${l.contact_name ? ' · ' + l.contact_name : ''}</a>`
     : '';
 
-  document.getElementById('modalLeadTitle').innerHTML = `${l.name} <span class="badge" style="background:${sc.bg};color:${sc.text};margin-left:6px;font-size:12px">${l.stage}</span>`;
+  document.getElementById('modalLeadTitle').innerHTML = `${escHtml(l.name)} <span class="badge" style="background:${sc.bg};color:${sc.text};margin-left:6px;font-size:12px">${l.stage}</span>`;
   document.getElementById('modalLeadBody').innerHTML = `
     ${waBlock}
     <div class="modal-row"><span class="mr-label">Follow-up</span><span class="mr-val">${isChecked ? '<span style="color:var(--green);font-weight:700">✅ Done this week</span>' : '<span style="color:var(--amber);font-weight:700">⚠️ Not yet this week</span>'}</span></div>
     <div class="modal-row"><span class="mr-label">Location</span><span class="mr-val">${l.city || '—'}, ${l.province || ''} · ${l.region || ''}</span></div>
-    <div class="modal-row"><span class="mr-label">Contact</span><span class="mr-val">${l.contact_name || '—'}${l.contact_wa ? ` <span style="color:var(--text-muted);font-size:11px">${l.contact_wa}</span>` : ''}</span></div>
+    <div class="modal-row"><span class="mr-label">Contact</span><span class="mr-val">${escHtml(l.contact_name || '—')}${l.contact_wa ? ` <span style="color:var(--text-muted);font-size:11px">${l.contact_wa}</span>` : ''}</span></div>
     <div class="modal-row"><span class="mr-label">Source</span><span class="mr-val">${l.source || '—'}</span></div>
     <div class="modal-row"><span class="mr-label">Last Contact</span><span class="mr-val ${days !== null && days > 7 ? 'last-stale' : ''}">${l.last_contact || 'Never'}${days !== null ? ` (${days}d ago)` : ''}</span></div>
     <div class="modal-row"><span class="mr-label">Assigned</span><span class="mr-val">${l.assigned || '—'}</span></div>
-    ${l.notes ? `<div class="modal-row"><span class="mr-label">Notes</span><span class="mr-val" style="font-size:12px;color:var(--text-muted);line-height:1.5">${l.notes}</span></div>` : ''}
+    ${l.notes ? `<div class="modal-row"><span class="mr-label">Notes</span><span class="mr-val" style="font-size:12px;color:var(--text-muted);line-height:1.5">${escHtml(l.notes)}</span></div>` : ''}
     <div class="modal-row" style="padding-top:12px"><span class="mr-label" style="color:var(--text-muted);font-size:11px">Est. Revenue</span><span class="mr-val" style="color:var(--text-muted);font-size:12px">${l.potential_monthly ? '~' + fmtIDR(l.potential_monthly) + '/mo (rough estimate)' : '—'}</span></div>
   `;
   document.getElementById('leadModal').style.display = 'flex';
@@ -2031,7 +2032,7 @@ html,body{background:#d9d6cd;margin:0;padding:0;font-family:"Plus Jakarta Sans",
           ${specRow('IG Handle', handleAt, niche.label)}
           ${specRow('Produk', prodsLabel, [...new Set(prods.map(p => HP_PRODUCTS_DB[p]?.range||''))].filter(Boolean).join(', ') + ' · Sampel via WhatsApp')}
           ${specRow('Angle / Tema', `<span style="font-size:12.5px;font-style:italic;color:#3A3C55">${hook||'—'}</span>`)}
-          ${d.notes ? specRow('Catatan', `<span style="font-size:12px;font-weight:500;color:#5A5C75">${d.notes}</span>`) : ''}
+          ${d.notes ? specRow('Catatan', `<span style="font-size:12px;font-weight:500;color:#5A5C75">${escHtml(d.notes)}</span>`) : ''}
         </div>
         <div style="border-left:1px dashed #E8E3D6;padding-left:16px">
           ${specRow('Tipe Brief', tier.label, tier.sublabel)}
@@ -2337,7 +2338,7 @@ function renderDistFulfillment() {
     return `<tr>
       <td class="num" style="color:var(--text-muted);font-size:11px;width:28px">${i+1}</td>
       <td>
-        <div style="font-weight:700;font-size:12.5px;line-height:1.3">${d.name}</div>
+        <div style="font-weight:700;font-size:12.5px;line-height:1.3">${escHtml(d.name)}</div>
         ${d.has_branches?'<div style="font-size:10px;color:var(--text-muted)">Multi-cabang</div>':''}
       </td>
       <td class="num" style="color:var(--text-muted)">${fmtNum(Math.round(d.po))}</td>
@@ -2564,7 +2565,7 @@ function renderDistIntelLegacy() {
     const colors = { high:'var(--red)', medium:'var(--amber)' };
     return `<div class="intel-row">
       <div>
-        <div class="intel-row-name">${d.name}</div>
+        <div class="intel-row-name">${escHtml(d.name)}</div>
         <div class="intel-row-sub">${d.city} · Tier ${d.tier}</div>
       </div>
       <div style="text-align:right">
@@ -2658,7 +2659,7 @@ function renderDistIntelLegacy() {
           <div>
             <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">Tier ${t} — ${label} (${list.length})</div>
             ${list.map(d => `<div class="intel-row" style="padding:4px 0">
-              <div><div style="font-size:12px;font-weight:600">${d.name}</div><div style="font-size:10.5px;color:var(--text-muted)">${d.city} · ${d.region}</div></div>
+              <div><div style="font-size:12px;font-weight:600">${escHtml(d.name)}</div><div style="font-size:10.5px;color:var(--text-muted)">${d.city} · ${d.region}</div></div>
               <div style="font-size:11.5px;font-weight:700;color:var(--primary);text-align:right">${fmtIDR(d.monthly_target)}</div>
             </div>`).join('') || `<div style="font-size:12px;color:var(--text-muted)">None yet</div>`}
           </div>`).join('')}
@@ -4106,7 +4107,7 @@ function renderExecutive() {
     const da = daysAgo(d.last_order_date);
     return `<div class="exec-list-row">
       <div>
-        <div style="font-weight:600;font-size:13px">${d.name}</div>
+        <div style="font-weight:600;font-size:13px">${escHtml(d.name)}</div>
         <div style="font-size:11px;color:var(--text-muted)">${d.city} · Tier ${d.tier}</div>
       </div>
       <span class="dslo-badge dslo-high">${da}h lalu</span>
@@ -4116,7 +4117,7 @@ function renderExecutive() {
   // Hot leads list (top 3)
   const hotList = hotLeads.slice(0,4).map(l => `<div class="exec-list-row">
     <div>
-      <div style="font-weight:600;font-size:13px">${l.name}</div>
+      <div style="font-weight:600;font-size:13px">${escHtml(l.name)}</div>
       <div style="font-size:11px;color:var(--text-muted)">${l.city} · ${l.stage}</div>
     </div>
     ${l.contact_wa ? `<a href="https://wa.me/${l.contact_wa.replace(/\D/g,'')}" target="_blank" class="wa-btn" style="font-size:11px;padding:3px 8px">💬</a>` : ''}
