@@ -202,3 +202,12 @@ tbody tr:last-child td{border-bottom:none}
 .fit-kbhook{display:block;font-size:11.5px;font-style:italic;color:#4a5468;margin-top:2px}
 .fit-brief-btn{margin-top:11px;width:100%;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:10px;font-weight:700;font-size:13px;cursor:pointer;transition:.15s}
 .fit-brief-btn:hover{background:var(--navy2)}
+/* ── Auth gate (standalone /kol/) ── */
+#hp-auth-overlay{position:fixed;inset:0;z-index:9999;background:#16233f;display:none;align-items:center;justify-content:center;padding:20px}
+.hp-auth-card{background:#fff;border-radius:16px;padding:32px 28px;width:min(360px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:12px;text-align:center}
+.hp-auth-logo{font-size:22px;font-weight:800;color:#16233f}.hp-auth-logo b{color:#ff7a1a}
+.hp-auth-sub{font-size:13px;color:#7b8499;margin-bottom:8px}
+.hp-auth-err{font-size:12.5px;color:#d64545;background:#fbeaea;border:1px solid #f3c0c0;border-radius:8px;padding:8px}
+.hp-auth-card input{font-family:inherit;font-size:14px;padding:11px 13px;border:1.5px solid #e7eaf0;border-radius:9px;outline:none}
+.hp-auth-card input:focus{border-color:#ff7a1a}
+.hp-auth-card button{font-family:inherit;font-size:14px;font-weight:700;background:#ff7a1a;color:#fff;border:none;border-radius:9px;padding:12px;cursor:pointer}

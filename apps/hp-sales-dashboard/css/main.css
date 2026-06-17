@@ -1515,3 +1515,17 @@ textarea.kol-inp { padding: 9px 10px; }
 .pdb-artchip{font-size:10.5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:1px 7px;color:var(--text-muted)}
 .pdb-artprice{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 @media(max-width:760px){.pdb-body{grid-template-columns:1fr}.pdb-rail{flex-direction:row;overflow-x:auto;position:static}.pdb-railitem{flex-shrink:0}}
+
+/* ── Auth gate ── */
+#hp-auth-overlay{position:fixed;inset:0;z-index:9999;background:#16233f;display:none;align-items:center;justify-content:center;padding:20px}
+.hp-auth-card{background:#fff;border-radius:16px;padding:32px 28px;width:min(360px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:12px;text-align:center;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+.hp-auth-logo{font-size:22px;font-weight:800;color:#16233f}
+.hp-auth-logo b{color:#FF7B1C}
+.hp-auth-sub{font-size:13px;color:#7B8899;margin-bottom:8px}
+.hp-auth-err{font-size:12.5px;color:#EF4444;background:#FEF2F2;border:1px solid #fecaca;border-radius:8px;padding:8px}
+.hp-auth-card input{font-family:inherit;font-size:14px;padding:11px 13px;border:1.5px solid #E4DDD5;border-radius:9px;outline:none}
+.hp-auth-card input:focus{border-color:#FF7B1C}
+.hp-auth-card button{font-family:inherit;font-size:14px;font-weight:700;background:#FF7B1C;color:#fff;border:none;border-radius:9px;padding:12px;cursor:pointer;margin-top:4px}
+.hp-auth-card button:hover{background:#E06810}
+#hp-userbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;margin:0 0 8px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11.5px;color:rgba(255,255,255,.7)}
+#hp-userbar button{background:rgba(255,255,255,.12);border:none;color:#fff;font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;cursor:pointer}

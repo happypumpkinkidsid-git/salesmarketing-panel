@@ -47,6 +47,17 @@ exports.handler = async (event) => {
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
+  // Require a logged-in owner/content member (KOL data is their domain).
+  const authz = (event.headers && (event.headers.authorization || event.headers.Authorization)) || '';
+  const jwt = authz.replace(/^Bearer\s+/i, '');
+  if (!jwt) return reply(401, { error: 'auth_required' });
+  try {
+    const { data: { user }, error } = await sb.auth.getUser(jwt);
+    if (error || !user) return reply(401, { error: 'invalid_token' });
+    const { data: m } = await sb.from('members').select('role').eq('email', user.email).maybeSingle();
+    if (!m || !['owner', 'content'].includes(m.role)) return reply(403, { error: 'forbidden' });
+  } catch (e) { return reply(401, { error: 'auth_failed' }); }
+
   try {
     if (event.httpMethod === 'GET') {
       const [kol, neg, state] = await Promise.all([

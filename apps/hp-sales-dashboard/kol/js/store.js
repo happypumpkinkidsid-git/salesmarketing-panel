@@ -19,20 +19,29 @@ const KOLStore = (() => {
   function saveLocal() {
     try { localStorage.setItem(LS_KEY, JSON.stringify(cache)); } catch (e) {}
   }
+  // logged-in session token (own window, or parent when embedded in the dashboard)
+  function authToken() {
+    try { return window.HP_TOKEN || (window.parent && window.parent.HP_TOKEN) || ''; } catch (e) { return ''; }
+  }
+  function headers(extra) {
+    const h = Object.assign({}, extra || {});
+    const t = authToken(); if (t) h['Authorization'] = 'Bearer ' + t;
+    return h;
+  }
   async function post(body) {
-    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    return fetch(API, { method: 'POST', headers: headers({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(body) });
   }
 
   async function tryBackend() {
     try {
-      const r = await fetch(API, { method: 'GET' });
+      const r = await fetch(API, { method: 'GET', headers: headers() });
       if (!r.ok) return false;
       const data = await r.json();
       if (data.error) return false;
       if (!data.kol || data.kol.length === 0) {
         await post({ action: 'seed', kol: window.KOL_SEED || [] });
-        const d2 = await (await fetch(API)).json();
+        const d2 = await (await fetch(API, { headers: headers() })).json();
         cache = { kol: d2.kol || [], negotiations: d2.negotiations || [], state: d2.state || {} };
       } else {
         cache = { kol: data.kol, negotiations: data.negotiations || [], state: data.state || {} };
