@@ -9,7 +9,7 @@
   const ROLE_TABS = {
     owner: '*',
     sales: ['brief', 'performance', 'channels', 'offline', 'dist-intel', 'leads', 'executive'],
-    content: ['kol', 'kol-program', 'product-database', 'performance'],
+    content: ['kol', 'kol-program', 'product-database', 'channels', 'inventory', 'sessions', 'orders', 'customers', 'campaigns'],
   };
   const DEFAULT_TAB = { owner: 'brief', sales: 'brief', content: 'kol' };
   const CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
