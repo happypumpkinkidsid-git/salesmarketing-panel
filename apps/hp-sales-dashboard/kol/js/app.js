@@ -15,6 +15,59 @@ const RATE_FORMATS = [
   ['owning','Owning / Mention'], ['keranjang','Keranjang Kuning'], ['taplink','Taplink'],
 ];
 
+// ── Workflow engine ───────────────────────────────────────────
+const MONTHS_OPTS = ['', 'Juni 2026','Juli 2026','Agustus 2026','September 2026','Oktober 2026','November 2026','Desember 2026'];
+const WF_OWNER = { Alex:{c:'#7a52cc',bg:'#f0ecfa'}, Hasna:{c:'#1f9d6b',bg:'#e6f6ef'}, Rahmi:{c:'#d98a00',bg:'#fff3df'} };
+const WF_STAGES = [['source','Sourcing'],['nego','Nego'],['approval','Approval'],['brief','Brief Prep'],['send','Kirim'],['done','Selesai']];
+// user product terms → KB collection id
+const COLLECTION_ALIASES = {
+  pureknit:['pureknit'], ultracool:['ultracool','ultra cool'], active:['activeknit','active knit'],
+  knitfashion:['knitted fashion','knitfashion','fashion'], woven:['woven','kemeja','collared shirt'],
+  play:['playwear'], basic:['basicwear','essential','basic'], denim:['denim','soft denim'],
+  sleep:['sleepwear','wonder set','wonderset','piyama','pajama','sleep'], breathe:['breatheknit','breathe knit','pointelle'],
+  softair:['softair','soft air','bamboo'], batik:['batik','kebaya'], raya:['raya','koko','gamis','lebaran','modest'],
+};
+function collectionOn(produk, cid) {
+  const p = (produk || '').toLowerCase();
+  return (COLLECTION_ALIASES[cid] || []).some(a => p.includes(a));
+}
+function nextStep(k) {
+  const wf = k.workflow || {};
+  const hasMonth = !!(k.campaign_month || '').trim();
+  const hasProd  = !!(k.produk || '').trim();
+  const s = k.status;
+  if (s === 'CANCEL')    return { label:'Dibatalkan', owner:'', stage:'cancel' };
+  if (s === 'HOLD')      return { label:'Parked — PR Pack / tinjau nanti', owner:'Hasna', stage:'hold' };
+  if (s === 'KANDIDAT')  return { label:'Screening & mulai nego', owner:'Hasna', stage:'source' };
+  if (s === 'NEGOSIASI') return { label:'Follow up tawaran ke KOL', owner:'Hasna', stage:'nego' };
+  if (s === 'PENDING')   return { label:'Review & approve', owner:'Alex', stage:'approval' };
+  if (s === 'DEAL' || s === 'BARTER') {
+    if (!hasMonth)        return { label:'Pilih bulan campaign', owner:'Alex', stage:'brief' };
+    if (!hasProd)         return { label:'Pilih produk / koleksi', owner:'Alex', stage:'brief' };
+    if (!wf.brief_created)return { label:'Buat brief', owner:'Rahmi', stage:'brief' };
+    if (!wf.brief_sent)   return { label:'Kirim brief ke KOL (WA)', owner:'Rahmi', stage:'send' };
+    return { label:'Selesai diproses', owner:'', stage:'done' };
+  }
+  if (s === 'SELESAI')   return { label:'Selesai', owner:'', stage:'done' };
+  return { label:'—', owner:'', stage:'' };
+}
+function nextStepTag(k) {
+  const ns = nextStep(k);
+  const o = WF_OWNER[ns.owner];
+  return o ? `<span class="ns-pill" style="background:${o.bg};color:${o.c}">${ns.owner} · ${esc(ns.label)}</span>`
+           : `<span class="ns-pill ns-muted">${esc(ns.label)}</span>`;
+}
+// advance buttons per status
+function advanceBtns(id, k) {
+  const s = k.status, b = [];
+  const B = (st, lbl, cls='') => `<button class="wf-btn ${cls}" onclick="advanceStatus('${id}','${st}')">${lbl}</button>`;
+  if (s === 'KANDIDAT')  b.push(B('NEGOSIASI','→ Mulai Nego'));
+  if (s === 'NEGOSIASI') b.push(B('PENDING','→ Ajukan ke Alex'));
+  if (s === 'PENDING') { b.push(`<button class="wf-btn ok" onclick="advanceStatus('${id}','DEAL','Approve')">✓ Approve</button>`); b.push(B('CANCEL','✗ Tolak','danger')); }
+  if ((s === 'DEAL' || s === 'BARTER') && nextStep(k).stage === 'done') b.push(B('SELESAI','→ Tandai Selesai','ok'));
+  return b.join('');
+}
+
 // ── helpers ───────────────────────────────────────────────────
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -197,6 +250,7 @@ function renderTracker() {
         <div class="tk-tier">${esc(k.tier || '—')}${k.in_juni ? ' · <span class="juni-dot">Juni</span>' : ''}</div></div>
       </td>
       <td><span class="chip ${statusClass(k.status)}">${esc(k.status)}</span></td>
+      <td class="tk-next">${nextStepTag(k)}</td>
       <td>${k.decision ? `<span class="chip ${decisionClass(k.decision)}">${esc(k.decision)}</span>` : '<span class="muted">—</span>'}</td>
       <td>${k.brief_type ? `<span class="brief-tag brief-${k.brief_type.split('-')[0].toLowerCase()}">${esc(k.brief_type)}</span>` : '<span class="muted">—</span>'}</td>
       <td class="tk-prod">${esc(k.produk || '—')}</td>
@@ -205,7 +259,7 @@ function renderTracker() {
       <td class="tk-num">${k.rate_barter ? fmtRpShort(k.rate_barter) : '—'}</td>
       <td class="tk-date">${k.decision_date || '<span class="muted">—</span>'}</td>
       <td class="tk-go">›</td>
-    </tr>`).join('') || `<tr><td colspan="10" class="muted" style="text-align:center;padding:24px">Tidak ada KOL di filter ini.</td></tr>`;
+    </tr>`).join('') || `<tr><td colspan="11" class="muted" style="text-align:center;padding:24px">Tidak ada KOL di filter ini.</td></tr>`;
 }
 
 // ── §5 KOL POOL (sourcing) ────────────────────────────────────
@@ -250,6 +304,41 @@ function openDrawer(id) {
   const negs = KOLStore.negotiationsFor(id);
   const rec = (window.KOL_INTEL) ? KOL_INTEL.recommendFor(k) : null;
 
+  // ── workflow panel ──
+  const ns = nextStep(k);
+  const curIdx = WF_STAGES.findIndex(s => s[0] === ns.stage);
+  const isDeal = (k.status === 'DEAL' || k.status === 'BARTER');
+  const wf = k.workflow || {};
+  const tick = (on, label, who) => `<div class="wf-item ${on?'done':''}"><span class="wf-tick">${on?'☑':'☐'}</span>${label}<span class="wf-who">${who}</span></div>`;
+  const tickBox = (key, label, who) => `<label class="wf-item ${wf[key]?'done':''}"><input type="checkbox" ${wf[key]?'checked':''} onchange="toggleWf('${id}','${key}',this.checked)"><span></span>${label}<span class="wf-who">${who}</span></label>`;
+  const wfChecklist = isDeal ? `<div class="wf-check">
+      ${tick(!!(k.campaign_month||'').trim(),'Bulan campaign','Alex')}
+      ${tick(!!(k.produk||'').trim(),'Produk / koleksi','Alex')}
+      ${tickBox('brief_created','Brief dibuat','Rahmi')}
+      ${tickBox('brief_sent','Brief dikirim ke KOL','Rahmi')}
+    </div>` : '';
+  const offramp = (ns.stage === 'cancel' || ns.stage === 'hold');
+  const wfHtml = `
+    <div class="wf-card ${offramp?'wf-off':''}">
+      ${offramp ? '' : `<div class="wf-track">${WF_STAGES.map((s,i)=>`<div class="wf-step ${i<=curIdx?'on':''} ${s[0]===ns.stage?'cur':''}"><span class="wf-dot"></span><span class="wf-lbl">${s[1]}</span></div>`).join('')}</div>`}
+      <div class="wf-next"><span class="wf-next-k">Next</span> ${nextStepTag(k)}</div>
+      ${wfChecklist}
+      ${advanceBtns(id,k) ? `<div class="wf-actions">${advanceBtns(id,k)}</div>` : ''}
+    </div>`;
+
+  // ── products / collections checklist ──
+  const prodHtml = `
+    <div class="dr-prodsel">
+      <div class="dr-prodsel-lbl">Produk / Koleksi <span class="dr-hint">untuk brief</span></div>
+      <div class="dr-prodsel-chips">
+        ${(window.HP_PRODUCT_DB && HP_PRODUCT_DB.collections || []).map(c => {
+          const on = collectionOn(k.produk, c.id);
+          return `<label class="prodchip ${on?'on':''}"><input type="checkbox" ${on?'checked':''} onchange="toggleCollection('${id}','${c.id}',this.checked)">${esc(c.name)}</label>`;
+        }).join('')}
+      </div>
+      ${(k.produk||'').trim() ? `<div class="dr-prodsel-cur">Terpilih: ${esc(k.produk)}</div>` : ''}
+    </div>`;
+
   $('#drawer').innerHTML = `
     <div class="dr-head">
       <div class="dr-id">
@@ -263,6 +352,8 @@ function openDrawer(id) {
     </div>
     <div class="dr-body">
 
+      ${wfHtml}
+
       <div class="dr-grid">
         <label>Status
           <select onchange="patchField('${id}','status',this.value)">
@@ -275,14 +366,16 @@ function openDrawer(id) {
         <label>Tgl Keputusan
           <input type="date" value="${k.decision_date||''}" onchange="patchField('${id}','decision_date',this.value)"></label>
         <label>Bulan Campaign
-          <input type="text" value="${esc(k.campaign_month||'')}" placeholder="cth: Juni 2026" onchange="patchField('${id}','campaign_month',this.value)"></label>
+          <select onchange="patchField('${id}','campaign_month',this.value)">
+            ${MONTHS_OPTS.map(m => `<option value="${m}" ${m===(k.campaign_month||'')?'selected':''}>${m||'— pilih bulan'}</option>`).join('')}
+          </select></label>
         <label>Tipe Brief
           <select onchange="patchField('${id}','brief_type',this.value)">
             ${BRIEFS.map(b => `<option value="${b}" ${b===(k.brief_type||'')?'selected':''}>${b||'—'}</option>`).join('')}
           </select></label>
-        <label>Produk / Koleksi
-          <input type="text" value="${esc(k.produk||'')}" onchange="patchField('${id}','produk',this.value)"></label>
       </div>
+
+      ${prodHtml}
 
       <div class="dr-grid" style="margin-top:11px">
         <label>Content Style <span class="dr-hint">consideration</span>
@@ -425,6 +518,30 @@ async function patchField(id, field, val) {
 async function patchConsideration(id, field, val) {
   await KOLStore.patchKOL(id, { [field]: val });
   openDrawer(id); renderTracker();
+}
+// ── workflow handlers ──
+async function advanceStatus(id, status, decision) {
+  const patch = { status };
+  if (decision) { patch.decision = decision; patch.decision_date = new Date().toISOString().slice(0, 10); }
+  await KOLStore.patchKOL(id, patch);
+  openDrawer(id); renderTracker(); renderJuni(); renderKPIs(); renderLatestUpdate(); renderPool();
+  toast('Status → ' + status);
+}
+async function toggleWf(id, key, val) {
+  const k = KOLStore.kolById(id); if (!k) return;
+  const wf = Object.assign({}, k.workflow || {}); wf[key] = val;
+  await KOLStore.patchKOL(id, { workflow: wf });
+  openDrawer(id); renderTracker();
+}
+async function toggleCollection(id, cid, on) {
+  const k = KOLStore.kolById(id); const db = window.HP_PRODUCT_DB; if (!k || !db) return;
+  const names = [];
+  db.collections.forEach(c => {
+    const sel = (c.id === cid) ? on : collectionOn(k.produk, c.id);
+    if (sel) names.push(c.name);
+  });
+  await KOLStore.patchKOL(id, { produk: names.join(', ') });
+  openDrawer(id); renderTracker(); renderJuni();
 }
 // hand off to the dashboard's Brief Generator, pre-filled
 function openBriefHandoff(id) {
