@@ -55,7 +55,7 @@ exports.handler = async (event) => {
     const { data: { user }, error } = await sb.auth.getUser(jwt);
     if (error || !user) return reply(401, { error: 'invalid_token' });
     const { data: m } = await sb.from('members').select('role').eq('email', user.email).maybeSingle();
-    if (!m || !['owner', 'content'].includes(m.role)) return reply(403, { error: 'forbidden' });
+    if (!m || !['owner', 'content', 'sales'].includes(m.role)) return reply(403, { error: 'forbidden' });
   } catch (e) { return reply(401, { error: 'auth_failed' }); }
 
   try {

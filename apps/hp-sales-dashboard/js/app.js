@@ -43,6 +43,15 @@ window.addEventListener('DOMContentLoaded', () => {
   // deep-link: open the section named in the URL hash (e.g. /#product-database)
   const h = (location.hash || '').slice(1);
   if (h && document.querySelector(`.nav-item[data-section="${h}"]`)) navigate(h);
+  // Consume a Brief-Generator prefill handed off from the Command Center (full-tab path).
+  try {
+    const raw = localStorage.getItem('hp_brief_payload');
+    if (raw) {
+      localStorage.removeItem('hp_brief_payload');
+      const pl = JSON.parse(raw);
+      if (pl && pl._ts && (Date.now() - pl._ts) < 60000) hpOpenBrief(pl);
+    }
+  } catch (e) {}
 });
 window.addEventListener('hashchange', () => {
   const h = (location.hash || '').slice(1);
@@ -1902,7 +1911,8 @@ function kolBuildBriefHTML(d) {
   }).join('');
 
   // Trust signals
-  const allTrust = [...new Set(prods.flatMap(p => HP_PRODUCTS_DB[p]?.trust || []))];
+  let allTrust = [...new Set(prods.flatMap(p => HP_PRODUCTS_DB[p]?.trust || []))];
+  if (!allTrust.length) allTrust = ['SNI', 'OEKO-TEX® Standard 100', '100% Katun'];
 
   // Hashtags
   const reqHashes = ['#HappyPumpkin', '#HappyPumpkinID', ...prods.flatMap(p => HP_PRODUCTS_DB[p]?.hashtags || [])];
@@ -1926,7 +1936,8 @@ function kolBuildBriefHTML(d) {
       <span>${text}</span>
     </li>`;
 
-  const mustHaveRows = tier.musthave.map(t  => li('★', tier.color, t)).join('');
+  const tagReq       = li('@', tier.color, 'Wajib <b>tag &amp; mention @happypumpkin.kids</b> di setiap postingan — Instagram &amp; TikTok.');
+  const mustHaveRows = tagReq + tier.musthave.map(t  => li('★', tier.color, t)).join('');
   const doRows       = doItems.slice(0,4).map(t  => li('✓', '#2E6A5E', t)).join('');
   const dontRows     = dontItems.slice(0,4).map(t => li('×', '#C9412A', t)).join('');
 
@@ -1964,11 +1975,8 @@ function kolBuildBriefHTML(d) {
         </div>
         <div style="font-size:11.5px;font-style:italic;color:#5A5C75;margin-bottom:8px">${ID(col.oneLiner)}</div>
         <div style="font-size:11px;background:#fff;border:1px solid #E8E3D6;border-left:3px solid ${colColor};border-radius:8px;padding:8px 10px;margin-bottom:10px;color:#3a4254"><b>Material:</b> ${ID(col.material)}</div>
-        ${lc('Say — Story / USP', '#2E6A5E')}${bullets(col.say, '#2E6A5E')}
-        ${lc('Show — Yang Difilmkan', '#2b6fd6')}${bullets(col.show, '#2b6fd6')}
-        ${lc('Avoid', '#C9412A')}${bullets(col.avoid, '#C9412A')}
-        ${lc('Hooks — Opener', colColor)}${(col.hooks || []).map(h => `<div style="font-size:11.5px;font-weight:600;background:#fff;border:1px solid #E8E3D6;border-radius:7px;padding:6px 10px;margin-bottom:5px;color:#1F2140">"${ID(h)}"</div>`).join('')}
-        <div style="font-size:11px;font-weight:600;color:${colColor};margin-top:8px">${col.hashtags}</div>
+        ${lc('Talking Points', '#2E6A5E')}${bullets(col.say, '#2E6A5E')}
+        ${lc('Hindari', '#C9412A')}${bullets(col.avoid, '#C9412A')}
       </div>`;
     }).join('');
   }
@@ -2080,10 +2088,9 @@ html,body{background:#d9d6cd;margin:0;padding:0;font-family:"Plus Jakarta Sans",
 
   <div style="flex:1;display:flex;flex-direction:column;gap:13px;padding-top:4px">
 
-    <!-- Product USP cards -->
+    <!-- Product talking points (condensed, per collection) -->
     <div>
-      ${lc('USP Produk — Talking Points')}
-      <div style="display:grid;grid-template-columns:${prodCols};gap:11px">${prodCards}</div>
+      ${lc('Produk — Talking Points')}
       ${kbBlock}
     </div>
 
@@ -2099,24 +2106,15 @@ html,body{background:#d9d6cd;margin:0;padding:0;font-family:"Plus Jakarta Sans",
       ${card(`${lc('× Don\'t', '#C9412A')}<ul style="list-style:none;padding:0;margin:0">${dontRows}</ul>`, 'border-top:3px solid #C9412A')}
     </div>
 
-    <!-- Must-have + Hashtags -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
-      ${card(`
-        ${lc('★ Wajib Ada di Konten', tier.color)}
-        <ul style="list-style:none;padding:0;margin:0">${mustHaveRows}</ul>
-      `, `border-top:3px solid ${tier.color}`)}
-      ${card(`
-        ${lc('Hashtag Wajib')}
-        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:${optHashes.length?'10px':'0'}">
-          ${reqHashes.map(h=>`<span style="background:${tier.color};color:white;font-weight:700;font-size:10.5px;padding:3px 9px;border-radius:999px">${h}</span>`).join('')}
-        </div>
-        ${optHashes.length?`${lc('Opsional')}<div style="display:flex;flex-wrap:wrap;gap:5px">${optHashes.map(h=>`<span style="background:#EFEAE0;color:#5A5C75;font-weight:600;font-size:10.5px;padding:3px 9px;border-radius:999px">${h}</span>`).join('')}</div>`:''}
-      `)}
-    </div>
+    <!-- Must-have (full width) -->
+    ${card(`
+      ${lc('★ Wajib Ada di Konten', tier.color)}
+      <ul style="list-style:none;padding:0;margin:0">${mustHaveRows}</ul>
+    `, `border-top:3px solid ${tier.color}`)}
 
   </div>
   <div class="df">
-    <span>USP Produk · Do/Don't · Wajib Ada · Hashtag</span>
+    <span>Produk · Do/Don't · Wajib Ada</span>
     <span class="pg">02 / 02</span>
   </div>
 </div>

@@ -351,3 +351,7 @@ tbody tr:last-child td{border-bottom:none}
 .dr-brief-cta.wait{background:#eef0f5;color:var(--muted)}
 .dr-brief-cta-hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:7px;line-height:1.45}
 .dr-brief-cta-hint.ok{color:var(--green);font-weight:600}
+
+/* Deal Rate: original ratecard text from the sheet */
+.dr-rate-src{font-size:11.5px;color:var(--muted);margin:-4px 0 9px;line-height:1.4}
+.dr-rate-src b{color:var(--ink);font-weight:600}

@@ -8,7 +8,7 @@
   const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ub2V0YmJicmd4cXFqc3NvbWRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNDEyNTksImV4cCI6MjA5NjkxNzI1OX0.Bwg1e4eCsH58xv8-ZSOFSH-hGxsjBlwJ47X1_HPTQho';
   const ROLE_TABS = {
     owner: '*',
-    sales: ['brief', 'performance', 'channels', 'offline', 'dist-intel', 'leads', 'executive'],
+    sales: ['brief', 'performance', 'channels', 'offline', 'dist-intel', 'leads', 'executive', 'kol-program'],
     content: ['kol', 'kol-program', 'product-database', 'channels', 'inventory', 'sessions', 'orders', 'customers', 'campaigns'],
   };
   const DEFAULT_TAB = { owner: 'brief', sales: 'brief', content: 'kol' };

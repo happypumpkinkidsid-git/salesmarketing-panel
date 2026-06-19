@@ -419,6 +419,7 @@ function openDrawer(id) {
         <label>Barter Value
           <div class="rp-inp"><span>Rp</span><input type="number" min="0" step="50000" value="${k.rate_barter||''}" placeholder="0" onchange="patchField('${id}','rate_barter',+this.value)"></div></label>
       </div>
+      ${k.ratecard_orig ? `<div class="dr-rate-src">📋 Dari sheet: <b>${esc(k.ratecard_orig)}</b></div>` : ''}
       <div class="dr-rate-pills">
         ${RATE_PILLS.map(([key,lbl]) => `<button class="rate-pill rp-${key.replace('_','-')} ${ratePill===key?'on':''}" onclick="setRatePill('${id}','${key}')">${lbl}</button>`).join('')}
       </div>
@@ -654,11 +655,17 @@ function openBriefHandoff(id) {
     collections,                                                            // array of KB collection ids
     collection: collections[0] || '',                                      // back-compat single
   };
-  if (window.parent && window.parent !== window && typeof window.parent.hpOpenBrief === 'function') {
-    window.parent.hpOpenBrief(payload);
-  } else {
-    try { sessionStorage.setItem('hp_brief_payload', JSON.stringify(payload)); } catch (e) {}
-    window.open('../index.html#kol', '_blank');
+  let handed = false;
+  try {
+    if (window.parent && window.parent !== window && typeof window.parent.hpOpenBrief === 'function') {
+      window.parent.hpOpenBrief(payload);
+      handed = true;
+    }
+  } catch (e) {}
+  if (!handed) {
+    // Full-tab Command Center: stash for the dashboard tab (localStorage = cross-tab) + redirect.
+    try { localStorage.setItem('hp_brief_payload', JSON.stringify({ ...payload, _ts: Date.now() })); } catch (e) {}
+    window.location.href = '../index.html#kol';
   }
 }
 
