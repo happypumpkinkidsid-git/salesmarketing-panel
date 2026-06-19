@@ -701,6 +701,12 @@ textarea.kol-inp { padding: 9px 10px; }
   margin-top: 4px;
 }
 .kol-gen-btn:hover { background: var(--primary-dark); }
+.kol-reset-btn {
+  background: transparent; color: var(--text-muted); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px 16px; font-size: 13.5px; font-weight: 700;
+  cursor: pointer; font-family: inherit; white-space: nowrap; margin-top: 4px; transition: 0.15s;
+}
+.kol-reset-btn:hover { border-color: var(--text-muted); color: var(--text); background: #fafbfd; }
 
 /* Research button */
 .kol-research-btn {

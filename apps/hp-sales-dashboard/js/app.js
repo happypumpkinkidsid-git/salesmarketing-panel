@@ -1769,7 +1769,10 @@ function renderKOLBrief() {
           </div>
         </div>
 
-        <button class="kol-gen-btn" onclick="generateKOLBrief()">✦ Generate Brief</button>
+        <div style="display:flex;gap:9px">
+          <button class="kol-gen-btn" style="flex:1" onclick="generateKOLBrief()">✦ Generate Brief</button>
+          <button class="kol-reset-btn" onclick="kolResetBrief()" title="Kosongkan semua isian">↺ Reset</button>
+        </div>
 
         <button class="kol-research-btn" onclick="copyKOLClaudePrompt()">
           🔍 Research KOL otomatis dengan Claude
@@ -1789,8 +1792,54 @@ function renderKOLBrief() {
     </div>
   `;
 
+  // Restore any saved draft, then auto-save on every edit
+  kolRestoreDraft();
+  const formCol = el.querySelector('.kol-form-col');
+  if (formCol) {
+    formCol.addEventListener('input', kolSaveDraft);
+    formCol.addEventListener('change', kolSaveDraft);
+  }
   // Init hook suggestions on load
   setTimeout(kolUpdateHookSuggestions, 0);
+}
+
+// ── Brief Generator draft auto-save (localStorage) ──
+const KOL_DRAFT_KEY = 'hp_brief_draft';
+function kolCollectFormState() {
+  const v  = id => (document.getElementById(id)?.value || '');
+  const ck = id => !!document.getElementById(id)?.checked;
+  return {
+    ig: v('kb_ig'), tiktok: ck('kb_tiktok'), niche: v('kb_niche'), notes: v('kb_notes'),
+    tier: v('kb_tier'), month: v('kb_month'), hook: v('kb_hook'), cash: v('kb_cash'),
+    barter: v('kb_barter'), ref: v('kb_ref'), pic: v('kb_pic'), picWa: v('kb_pic_wa'),
+    collections: [...document.querySelectorAll('input[name="kb_collections"]:checked')].map(e => e.value),
+  };
+}
+function kolSaveDraft() {
+  try { localStorage.setItem(KOL_DRAFT_KEY, JSON.stringify(kolCollectFormState())); } catch (e) {}
+}
+function kolRestoreDraft() {
+  let d; try { d = JSON.parse(localStorage.getItem(KOL_DRAFT_KEY) || 'null'); } catch (e) {}
+  if (!d) return false;
+  const set = (id, val) => { const e = document.getElementById(id); if (e && val != null) e.value = val; };
+  set('kb_ig', d.ig); set('kb_niche', d.niche); set('kb_notes', d.notes); set('kb_month', d.month);
+  set('kb_hook', d.hook); set('kb_cash', d.cash); set('kb_barter', d.barter); set('kb_ref', d.ref);
+  if (d.pic != null && d.pic !== '') set('kb_pic', d.pic);
+  if (d.picWa != null && d.picWa !== '') set('kb_pic_wa', d.picWa);
+  const tt = document.getElementById('kb_tiktok'); if (tt) tt.checked = !!d.tiktok;
+  if (d.tier) try { kolSelectTier(d.tier); } catch (e) {}
+  if (Array.isArray(d.collections)) {
+    document.querySelectorAll('input[name="kb_collections"]').forEach(cb => { cb.checked = d.collections.includes(cb.value); });
+  }
+  if (d.ig)    try { kolHandleUsernameInput(d.ig); } catch (e) {}
+  if (d.niche) try { kolUpdateNicheHelper(d.niche); } catch (e) {}
+  return true;
+}
+function kolResetBrief() {
+  if (!confirm('Kosongkan semua isian brief? Draft tersimpan akan dihapus.')) return;
+  try { localStorage.removeItem(KOL_DRAFT_KEY); } catch (e) {}
+  renderKOLBrief();             // re-render blank (default tier + ActiveKnit collection)
+  try { showToast('Brief dikosongkan'); } catch (e) {}
 }
 
 function kolSelectTier(tier) {
@@ -1798,6 +1847,7 @@ function kolSelectTier(tier) {
     c.classList.toggle('kol-tier-active', c.dataset.tier === tier));
   document.getElementById('kb_tier').value = tier;
   kolUpdateHookSuggestions();
+  kolSaveDraft();
 }
 
 // --- Generate ---
@@ -2894,6 +2944,7 @@ window.hpOpenBrief = function (p) {
     // Angle: blank → brief prints "Diserahkan ke creator"
     const hk = document.getElementById('kb_hook'); if (hk) hk.value = p.angle || p.hook || '';
     try { kolUpdateHookSuggestions(); } catch (e) {}
+    try { kolSaveDraft(); } catch (e) {}   // Command Center handoff overwrites the saved draft
     try { showToast('✦ Brief di-prefill dari Command Center'); } catch (e) {}
     window.scrollTo(0, 0);
   }, 280);

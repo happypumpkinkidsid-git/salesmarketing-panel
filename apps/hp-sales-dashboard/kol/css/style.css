@@ -132,7 +132,7 @@ tbody tr:last-child td{border-bottom:none}
 .drawer-wrap.open{pointer-events:auto}
 .drawer-backdrop{position:absolute;inset:0;background:rgba(20,35,63,.4);opacity:0;transition:.2s}
 .drawer-wrap.open .drawer-backdrop{opacity:1}
-.drawer{position:absolute;top:0;right:0;height:100%;width:min(520px,94vw);background:var(--bg);box-shadow:-8px 0 30px rgba(20,35,63,.18);transform:translateX(100%);transition:transform .22s ease;overflow-y:auto}
+.drawer{position:absolute;top:0;right:0;height:100%;width:min(780px,96vw);background:var(--bg);box-shadow:-8px 0 30px rgba(20,35,63,.18);transform:translateX(100%);transition:transform .22s ease;overflow-y:auto}
 .drawer-wrap.open .drawer{transform:translateX(0)}
 .dr-head{position:sticky;top:0;background:var(--navy);color:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;z-index:2}
 .dr-id{display:flex;align-items:center;gap:12px}
