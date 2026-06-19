@@ -241,7 +241,7 @@ window.HP_PRODUCT_DB = {
     },
     {
       "id": "active",
-      "name": "Active Knit",
+      "name": "ActiveKnit™",
       "kicker": {
         "en": "Stretch & Move",
         "id": "Lentur & Aktif"
@@ -257,8 +257,8 @@ window.HP_PRODUCT_DB = {
         "SEC B/C"
       ],
       "material": {
-        "en": "Cotton-spandex rib knit — 4-way stretch, breathable, recovers its shape.",
-        "id": "Rib knit katun-spandex — melar 4 arah, adem, balik ke bentuk semula."
+        "en": "Cotton Spandex — 4-way stretch, breathable, recovers its shape.",
+        "id": "Cotton Spandex / Katun Spandex — melar 4 arah, adem, balik ke bentuk semula."
       },
       "say": [
         {

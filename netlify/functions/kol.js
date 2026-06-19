@@ -102,6 +102,40 @@ exports.handler = async (event) => {
         return reply(200, { ok: true, value });
       }
 
+      // Attach a generated brief file → private 'briefs' bucket → signed link.
+      // Sets workflow.brief_created so the next step auto-advances to Rahmi.
+      if (action === 'upload_brief') {
+        const { id, filename, contentType, data_b64 } = body;
+        if (!id || !data_b64) return reply(400, { error: 'bad_upload' });
+        const safe = String(filename || 'brief').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-60) || 'brief';
+        const path = `${id}/${Date.now()}-${safe}`;
+        const buf = Buffer.from(data_b64, 'base64');
+        if (buf.length > 10 * 1024 * 1024) return reply(413, { error: 'too_large' });
+        const up = await sb.storage.from('briefs')
+          .upload(path, buf, { contentType: contentType || 'application/pdf', upsert: true });
+        if (up.error) throw up.error;
+        const signed = await sb.storage.from('briefs').createSignedUrl(path, 60 * 60 * 24 * 365);
+        if (signed.error) throw signed.error;
+        const cur = await sb.from('kol').select('workflow').eq('id', id).maybeSingle();
+        const wf = Object.assign({}, (cur.data && cur.data.workflow) || {}, {
+          brief_created: true,
+          brief_url: signed.data.signedUrl,
+          brief_path: path,
+          brief_at: new Date().toISOString(),
+        });
+        const { error } = await sb.from('kol').update({ workflow: wf }).eq('id', id);
+        if (error) throw error;
+        return reply(200, { ok: true, url: signed.data.signedUrl, workflow: wf });
+      }
+
+      // Re-sign a stored brief path (links expire after 1 year).
+      if (action === 'sign_brief') {
+        if (!body.path) return reply(400, { error: 'no_path' });
+        const s = await sb.storage.from('briefs').createSignedUrl(body.path, 60 * 60 * 24 * 365);
+        if (s.error) throw s.error;
+        return reply(200, { ok: true, url: s.data.signedUrl });
+      }
+
       if (action === 'seed') {
         const rows = body.kol || [];
         const { data, error } = await sb.from('kol').upsert(rows, { onConflict: 'id' }).select('id');

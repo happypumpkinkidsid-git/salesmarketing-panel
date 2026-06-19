@@ -86,6 +86,26 @@ const KOLStore = (() => {
       return local;
     },
 
+    // Upload a generated brief file → backend stores it + sets workflow.brief_created.
+    // Returns the signed URL, or null if not on the live backend.
+    async uploadBrief(id, file) {
+      if (mode !== 'backend') return null;
+      const data_b64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(String(r.result || '').split(',').pop() || '');
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+      const r = await post({ action: 'upload_brief', id, filename: file.name,
+        contentType: file.type || 'application/pdf', data_b64 });
+      if (!r.ok) return null;
+      const j = await r.json().catch(() => ({}));
+      if (!j.ok) return null;
+      const k = this.kolById(id);
+      if (k && j.workflow) k.workflow = Object.assign({}, k.workflow || {}, j.workflow);
+      return j.url;
+    },
+
     async setLatestUpdate(text, by) {
       const value = { text, by, at: new Date().toISOString() };
       cache.state.latest_update = value;

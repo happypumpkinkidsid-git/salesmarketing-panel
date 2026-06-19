@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css?v=9">
   <script src="../js/auth.js?v=2"></script>
 </head>
 <body>
@@ -29,6 +29,22 @@
 
     <!-- §1 LATEST UPDATE (first heading) -->
     <div class="latest-update" id="latestUpdate"></div>
+
+    <!-- §1b AI DECISION BOX -->
+    <div class="ai-box" id="aiBox">
+      <div class="ai-head">
+        <span class="ai-spark">✦</span>
+        <div>
+          <div class="ai-title">Asisten Keputusan</div>
+          <div class="ai-sub">Ketik perintah biasa — mis. "deal lenaa &amp; hideo, cancel 3 pending sisanya". Diusulkan dulu, kamu yang setujui.</div>
+        </div>
+      </div>
+      <div class="ai-input-row">
+        <textarea id="aiInput" rows="1" placeholder="Tulis keputusan / perintah di sini…" oninput="aiAutoGrow(this)" onkeydown="aiKey(event)"></textarea>
+        <button class="ai-send" id="aiSend" onclick="aiAsk()">Tanya AI</button>
+      </div>
+      <div class="ai-result" id="aiResult"></div>
+    </div>
 
     <!-- §2 AT A GLANCE -->
     <section class="section">
@@ -107,10 +123,10 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="../js/product-db.js?v=1"></script>
+  <script src="../js/product-db.js?v=2"></script>
   <script src="js/data.js?v=2"></script>
   <script src="js/intelligence.js?v=5"></script>
-  <script src="js/store.js?v=2"></script>
-  <script src="js/app.js?v=7"></script>
+  <script src="js/store.js?v=3"></script>
+  <script src="js/app.js?v=10"></script>
 </body>
 </html>

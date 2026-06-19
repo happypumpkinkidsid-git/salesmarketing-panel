@@ -9,6 +9,7 @@
     "sync": "/tmp/kol-venv/bin/python scripts/sync-sheets.py"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.2",
     "@supabase/supabase-js": "^2.45.0"
   },
   "devDependencies": {

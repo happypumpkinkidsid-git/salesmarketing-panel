@@ -14,6 +14,11 @@ const RATE_FORMATS = [
   ['reels','Reels'], ['vt','Video / VT'], ['story','Story'],
   ['owning','Owning / Mention'], ['keranjang','Keranjang Kuning'], ['taplink','Taplink'],
 ];
+// Deal-rate approval pills (drive Status); reject reasons; scope content types.
+const RATE_PILLS = [['DEAL','DEAL'], ['nego_awal','Nego Awal'], ['nego_ulang','Nego Ulang'], ['REJECT','Reject']];
+const REJECT_REASONS = ['Terlalu Mahal', 'Tidak Lolos Tes Organik', 'Hold ke bulan depan'];
+const PKS_TYPES = ['Tiktok Video', 'IG Reels', 'IG Story', 'Add on Taplink Story', 'IG Post', 'IG Carousel', 'Shopee Video', 'Collab Post', 'Content Owning'];
+const BRIEF_TO_TIER = { 'Soft-selling': 'soft', 'Mid-selling': 'mid', 'Hard-selling': 'hard' };
 
 // ── Workflow engine ───────────────────────────────────────────
 const MONTHS_OPTS = ['', 'Juni 2026','Juli 2026','Agustus 2026','September 2026','Oktober 2026','November 2026','Desember 2026'];
@@ -309,6 +314,8 @@ function openDrawer(id) {
   const curIdx = WF_STAGES.findIndex(s => s[0] === ns.stage);
   const isDeal = (k.status === 'DEAL' || k.status === 'BARTER');
   const wf = k.workflow || {};
+  const pks = wf.pks || [];
+  const ratePill = activeRatePill(k);
   const tick = (on, label, who) => `<div class="wf-item ${on?'done':''}"><span class="wf-tick">${on?'☑':'☐'}</span>${label}<span class="wf-who">${who}</span></div>`;
   const tickBox = (key, label, who) => `<label class="wf-item ${wf[key]?'done':''}"><input type="checkbox" ${wf[key]?'checked':''} onchange="toggleWf('${id}','${key}',this.checked)"><span></span>${label}<span class="wf-who">${who}</span></label>`;
   const wfChecklist = isDeal ? `<div class="wf-check">
@@ -316,6 +323,25 @@ function openDrawer(id) {
       ${tick(!!(k.produk||'').trim(),'Produk / koleksi','Alex')}
       ${tickBox('brief_created','Brief dibuat','Rahmi')}
       ${tickBox('brief_sent','Brief dikirim ke KOL','Rahmi')}
+    </div>` : '';
+  // ── brief attach (DEAL/BARTER): upload generated brief → auto hands to Rahmi ──
+  const briefUrl = wf.brief_url || '';
+  const briefBox = isDeal ? `
+    <div class="dr-brief ${briefUrl ? 'has' : ''}">
+      <div class="dr-brief-lbl">📄 Brief PDF <span class="dr-hint">unggah hasil brief → otomatis diteruskan ke Rahmi</span></div>
+      ${briefUrl ? `
+        <div class="dr-brief-row">
+          <a class="dr-brief-link" href="${esc(briefUrl)}" target="_blank" rel="noopener">📄 Lihat / unduh brief ↗</a>
+          <label class="dr-brief-replace">Ganti<input type="file" accept="application/pdf,text/html,image/*" onchange="briefAttach('${id}',this)"></label>
+        </div>
+        <div class="dr-brief-note">Tersimpan${wf.brief_at ? ` · ${fmtDateTime(wf.brief_at)}` : ''}. Next: <b>Rahmi</b> kirim ke KOL (WA), lalu centang "Brief dikirim".</div>
+      ` : `
+        <label class="dr-brief-up">
+          <input type="file" accept="application/pdf,text/html,image/*" onchange="briefAttach('${id}',this)">
+          <span class="dr-brief-cta">📎 Lampirkan Brief PDF</span>
+        </label>
+        <div class="dr-brief-note">Setelah dilampirkan, "Brief dibuat" otomatis tercentang & langkah berikutnya jadi <b>Rahmi · kirim ke KOL</b>.</div>
+      `}
     </div>` : '';
   const offramp = (ns.stage === 'cancel' || ns.stage === 'hold');
   const wfHtml = `
@@ -353,18 +379,13 @@ function openDrawer(id) {
     <div class="dr-body">
 
       ${wfHtml}
+      ${briefBox}
 
       <div class="dr-grid">
         <label>Status
           <select onchange="patchField('${id}','status',this.value)">
             ${STATUSES.map(s => `<option ${s===k.status?'selected':''}>${s}</option>`).join('')}
           </select></label>
-        <label>Keputusan Manajemen
-          <select onchange="patchDecision('${id}',this.value)">
-            ${DECISIONS.map(d => `<option value="${d}" ${d===(k.decision||'')?'selected':''}>${d||'—'}</option>`).join('')}
-          </select></label>
-        <label>Tgl Keputusan
-          <input type="date" value="${k.decision_date||''}" onchange="patchField('${id}','decision_date',this.value)"></label>
         <label>Bulan Campaign
           <select onchange="patchField('${id}','campaign_month',this.value)">
             ${MONTHS_OPTS.map(m => `<option value="${m}" ${m===(k.campaign_month||'')?'selected':''}>${m||'— pilih bulan'}</option>`).join('')}
@@ -373,6 +394,8 @@ function openDrawer(id) {
           <select onchange="patchField('${id}','brief_type',this.value)">
             ${BRIEFS.map(b => `<option value="${b}" ${b===(k.brief_type||'')?'selected':''}>${b||'—'}</option>`).join('')}
           </select></label>
+        <label>Tgl Keputusan
+          <input type="date" value="${k.decision_date||''}" onchange="patchField('${id}','decision_date',this.value)"></label>
       </div>
 
       ${prodHtml}
@@ -388,95 +411,68 @@ function openDrawer(id) {
           </select></label>
       </div>
 
-      ${rec ? `
-      <div class="fit-card">
-        <div class="fit-head">
-          <span class="fit-kicker">✦ Creative Fit</span>
-          <span class="fit-sub">inferensi dari profil — kamu tetap yang putuskan</span>
+      <!-- DEAL RATE -->
+      <div class="dr-section">💰 Deal Rate</div>
+      <div class="dr-deal-rate">
+        <label>Cash Value
+          <div class="rp-inp"><span>Rp</span><input type="number" min="0" step="50000" value="${k.rate_cash||''}" placeholder="0" onchange="patchField('${id}','rate_cash',+this.value)"></div></label>
+        <label>Barter Value
+          <div class="rp-inp"><span>Rp</span><input type="number" min="0" step="50000" value="${k.rate_barter||''}" placeholder="0" onchange="patchField('${id}','rate_barter',+this.value)"></div></label>
+      </div>
+      <div class="dr-rate-pills">
+        ${RATE_PILLS.map(([key,lbl]) => `<button class="rate-pill rp-${key.replace('_','-')} ${ratePill===key?'on':''}" onclick="setRatePill('${id}','${key}')">${lbl}</button>`).join('')}
+      </div>
+      ${(k.status === 'CANCEL' || ratePill === 'REJECT') ? `
+      <div class="dr-reject">
+        <div class="dr-reject-lbl">Alasan Reject</div>
+        <div class="dr-reject-pills">
+          ${REJECT_REASONS.map(r => `<button class="reject-pill ${wf.reject_reason===r?'on':''}" onclick="setRejectReason('${id}',${JSON.stringify(r)})">${esc(r)}</button>`).join('')}
         </div>
-        <div class="fit-tags">
-          <span class="fit-tag">${esc(rec.contentLabel)}${rec.styleInferred ? ' <span class="fit-auto">auto</span>' : ' <span class="fit-set">set</span>'}</span>
-          ${rec.family !== 'Solo' ? `<span class="fit-tag fit-fam">${rec.family === 'Twins' ? '👯 Twins' : '👫 Sibling'}${rec.familyInferred ? ' <span class="fit-auto">auto</span>' : ''}</span>` : ''}
-          <span class="fit-tag fit-trig">${esc(rec.trigger)}</span>
-        </div>
-        <div class="fit-row">
-          <span class="fit-k">Brief disarankan</span>
-          <span class="fit-v"><b>${esc(rec.briefType)}</b> <span class="muted">· ${esc(rec.briefBasis)}</span>
-            ${rec.briefType !== k.brief_type ? `<button class="fit-apply" onclick="applyFit('${id}','brief_type','${esc(rec.briefType)}')">pakai</button>` : '<span class="fit-ok">✓ cocok</span>'}</span>
-        </div>
-        <div class="fit-row">
-          <span class="fit-k">Produk paling klop</span>
-          <span class="fit-v">${rec.products.slice(0,4).map(p => `<span class="fit-prod">${esc(p)}</span>`).join('')}
-            <button class="fit-apply" onclick="applyFit('${id}','produk',${JSON.stringify(rec.products.slice(0,4).join(', '))})">pakai</button></span>
-        </div>
-        <div class="fit-row">
-          <span class="fit-k">Arah angle</span>
-          <span class="fit-v">${esc(rec.angle)}</span>
-        </div>
-        ${rec.collection ? `
-        <div class="fit-row">
-          <span class="fit-k">Koleksi KB</span>
-          <span class="fit-v"><b>${esc(rec.collection.name)}</b>
-            ${rec.collection.hookEn ? `<span class="fit-kbhook">“${esc(rec.collection.hookEn)}”</span>` : ''}</span>
-        </div>` : ''}
-        <details class="fit-why"><summary>kenapa?</summary>
-          <ul>${rec.rationale.map(r => `<li>${r.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</li>`).join('')}</ul>
-        </details>
-        <button class="fit-brief-btn" onclick="openBriefHandoff('${id}')">✦ Buat Brief di Generator →</button>
+        ${wf.reject_reason==='Hold ke bulan depan' ? `<div class="dr-reject-note">→ dipindah ke HOLD &amp; bulan berikutnya; kamu akan diingatkan.</div>` : ''}
       </div>` : ''}
 
-      <label class="dr-full">Angle / Tema Utama
-        <textarea rows="2" onchange="patchField('${id}','angle',this.value)">${esc(k.angle||'')}</textarea></label>
+      <!-- SCOPE KERJASAMA (PKS) -->
+      <div class="dr-section">📋 Scope Kerjasama (PKS) <span class="dr-section-sub">jenis konten + jumlah</span></div>
+      <div class="dr-pks">
+        ${pks.length ? pks.map(p => `
+          <div class="pks-item">
+            <span class="pks-type">${esc(p.type)}</span>
+            <input class="pks-qty" type="number" min="0" value="${p.qty}" onchange="pksQty('${id}',${JSON.stringify(p.type)},this.value)">
+            <button class="pks-x" onclick="pksRemove('${id}',${JSON.stringify(p.type)})">✕</button>
+          </div>`).join('') : '<div class="muted" style="font-size:12px;padding:4px 0">Belum ada scope.</div>'}
+        <div class="pks-add">
+          <select id="pksSel_${id}">
+            <option value="">+ Tambah jenis konten…</option>
+            ${PKS_TYPES.filter(t => !pks.some(p => p.type === t)).map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('')}
+          </select>
+          <button class="pks-add-btn" onclick="pksAdd('${id}', document.getElementById('pksSel_${id}').value)">Tambah</button>
+        </div>
+      </div>
+
+      <label class="dr-full">Angle / Tema Utama <span class="dr-hint">kosong = Diserahkan ke creator</span>
+        <textarea rows="2" placeholder="Kosongkan untuk beri kebebasan kreator…" onchange="patchField('${id}','angle',this.value)">${esc(k.angle||'')}</textarea></label>
       <label class="dr-full">Reference Content Link
         <input type="text" value="${esc(k.ref_link||'')}" placeholder="https://instagram.com/reel/…" onchange="patchField('${id}','ref_link',this.value)"></label>
-      <label class="dr-full">Scope / Deliverables
-        <input type="text" value="${esc(k.scope||'')}" onchange="patchField('${id}','scope',this.value)"></label>
 
-      <!-- RATE CARD (Hasna) -->
-      <div class="dr-section">💰 Rate Card <span class="dr-section-sub">Hasna isi per format</span></div>
-      <div class="dr-rates">
-        ${RATE_FORMATS.map(([key,lbl]) => `
-          <label>${lbl}
-            <input type="number" min="0" step="50000" value="${rc[key]||''}" placeholder="0"
-              oninput="updateRateCard('${id}')" data-rc="${key}"></label>`).join('')}
-      </div>
-      <div class="dr-rate-foot">
-        <div>Package total: <b id="rcPkg">${fmtRp(pkg)}</b></div>
-        <label class="inline">Cash deal <input type="number" min="0" step="50000" value="${k.rate_cash||''}" onchange="patchField('${id}','rate_cash',+this.value)" style="width:120px"></label>
-        <label class="inline">Barter <input type="number" min="0" step="50000" value="${k.rate_barter||''}" onchange="patchField('${id}','rate_barter',+this.value)" style="width:120px"></label>
-      </div>
-      <label class="dr-full">Original ratecard (catatan)
-        <input type="text" value="${esc(k.ratecard_orig||'')}" onchange="patchField('${id}','ratecard_orig',this.value)"></label>
-
-      <!-- NEGOTIATION LOG -->
-      <div class="dr-section">🤝 Negotiation Log <span class="dr-section-sub">tiap baris di-stamp tanggal</span></div>
-      <div id="negList" class="dr-neg-list">${renderNegList(negs)}</div>
-      <details class="dr-neg-add">
-        <summary>+ Tambah ronde negosiasi</summary>
-        <div class="dr-neg-form">
-          <div class="neg-row">
-            <label>Tanggal<input type="date" id="ng_date" value="${today()}"></label>
-            <label>Ronde<input type="number" id="ng_round" value="${negs.length+1}" min="1" style="width:64px"></label>
-            <label>Setuju?<select id="ng_agreed"><option value="false">Belum</option><option value="true">Ya</option></select></label>
+      ${rec ? `
+      <details class="fit-details">
+        <summary><span class="fit-kicker">✦ Creative Fit</span> <span class="fit-sub">panduan — tidak otomatis ke brief</span></summary>
+        <div class="fit-card-inner">
+          <div class="fit-tags">
+            <span class="fit-tag">${esc(rec.contentLabel)}</span>
+            ${rec.family !== 'Solo' ? `<span class="fit-tag fit-fam">${rec.family === 'Twins' ? '👯 Twins' : '👫 Sibling'}</span>` : ''}
+            <span class="fit-tag fit-trig">${esc(rec.trigger)}</span>
           </div>
-          <div class="neg-row">
-            <label>HP cash<input type="number" id="ng_hpc" placeholder="0"></label>
-            <label>HP barter<input type="number" id="ng_hpb" placeholder="0"></label>
-            <label>KOL minta cash<input type="number" id="ng_kc" placeholder="0"></label>
-            <label>KOL minta barter<input type="number" id="ng_kb" placeholder="0"></label>
-          </div>
-          <textarea id="ng_notes" rows="2" placeholder="Catatan / konteks negosiasi…"></textarea>
-          <div class="neg-row">
-            <label>Items<input type="text" id="ng_items" placeholder="produk yang dikonfirmasi"></label>
-            <label>Next step<input type="text" id="ng_next" placeholder="langkah berikutnya"></label>
-            <label>Oleh<input type="text" id="ng_by" placeholder="nama"></label>
-          </div>
-          <button class="btn btn-primary" onclick="addNeg('${id}')">Simpan ronde</button>
+          <div class="fit-row"><span class="fit-k">Brief disarankan</span><span class="fit-v"><b>${esc(rec.briefType)}</b> <span class="muted">· ${esc(rec.briefBasis)}</span></span></div>
+          <div class="fit-row"><span class="fit-k">Produk klop</span><span class="fit-v">${rec.products.slice(0,4).map(p => `<span class="fit-prod">${esc(p)}</span>`).join('')}</span></div>
+          <div class="fit-row"><span class="fit-k">Arah angle</span><span class="fit-v">${esc(rec.angle)}</span></div>
+          ${rec.collection ? `<div class="fit-row"><span class="fit-k">Koleksi KB</span><span class="fit-v"><b>${esc(rec.collection.name)}</b></span></div>` : ''}
+          <details class="fit-why"><summary>kenapa?</summary><ul>${rec.rationale.map(r => `<li>${r.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</li>`).join('')}</ul></details>
         </div>
-      </details>
+      </details>` : ''}
 
       <!-- NOTES -->
-      <div class="dr-section">📝 Catatan</div>
+      <div class="dr-section">📝 Catatan <span class="dr-section-sub">internal — tidak masuk brief</span></div>
       <label class="dr-full">Notes untuk Hasna
         <textarea rows="2" onchange="patchField('${id}','notes_hasna',this.value)">${esc(k.notes_hasna||'')}</textarea></label>
       <label class="dr-full">Internal notes
@@ -486,6 +482,13 @@ function openDrawer(id) {
         ${k.ig_link ? `<a href="${esc(k.ig_link)}" target="_blank" rel="noopener">Instagram ↗</a>` : ''}
         ${k.kontak_wa ? `<a href="https://wa.me/${esc(k.kontak_wa.replace(/[^0-9]/g,''))}" target="_blank" rel="noopener">WhatsApp ↗</a>` : ''}
       </div>
+
+      <button class="dr-brief-cta ${isDeal && (k.campaign_month||'').trim() && (k.produk||'').trim() ? 'ready' : 'wait'}" onclick="openBriefHandoff('${id}')">
+        ✦ Buat Brief di Generator →
+      </button>
+      ${isDeal && (k.campaign_month||'').trim() && (k.produk||'').trim()
+        ? `<div class="dr-brief-cta-hint ok">Semua kotak penting terisi — siap dibuatkan brief.</div>`
+        : `<div class="dr-brief-cta-hint">Lengkapi <b>Status DEAL</b>, <b>Bulan</b>, &amp; <b>Produk</b> agar konteks ter-map penuh ke generator.</div>`}
     </div>`;
   $('#drawerWrap').classList.add('open');
 }
@@ -543,16 +546,113 @@ async function toggleCollection(id, cid, on) {
   await KOLStore.patchKOL(id, { produk: names.join(', ') });
   openDrawer(id); renderTracker(); renderJuni();
 }
-// hand off to the dashboard's Brief Generator, pre-filled
+
+// ── Deal Rate approval pills (drive Status) ──
+function activeRatePill(k) {
+  const wf = k.workflow || {};
+  if (k.status === 'DEAL' || k.status === 'BARTER') return 'DEAL';
+  if (k.status === 'CANCEL') return 'REJECT';
+  if (k.status === 'NEGOSIASI') return wf.rate_stage === 'ulang' ? 'nego_ulang' : 'nego_awal';
+  return '';
+}
+function nextMonthOf(m) {
+  const i = MONTHS_OPTS.indexOf(m);
+  if (i > 0 && i < MONTHS_OPTS.length - 1) return MONTHS_OPTS[i + 1];
+  if (i <= 0) return MONTHS_OPTS[1];          // blank/first → first real month
+  return MONTHS_OPTS[MONTHS_OPTS.length - 1]; // already last → stay
+}
+async function setRatePill(id, pill) {
+  const k = KOLStore.kolById(id); if (!k) return;
+  const wf = Object.assign({}, k.workflow || {});
+  let patch;
+  if (pill === 'DEAL')            patch = { status: 'DEAL',   decision: 'Approve',    decision_date: today() };
+  else if (pill === 'REJECT')     patch = { status: 'CANCEL', decision: 'Disapprove', decision_date: today() };
+  else if (pill === 'nego_awal')  { wf.rate_stage = 'awal';  patch = { status: 'NEGOSIASI', workflow: wf }; }
+  else if (pill === 'nego_ulang') { wf.rate_stage = 'ulang'; patch = { status: 'NEGOSIASI', workflow: wf }; }
+  else return;
+  await KOLStore.patchKOL(id, patch);
+  openDrawer(id); renderTracker(); renderJuni(); renderKPIs(); renderLatestUpdate(); renderPool();
+  toast('Rate: ' + (RATE_PILLS.find(p => p[0] === pill)?.[1] || pill));
+}
+async function setRejectReason(id, reason) {
+  const k = KOLStore.kolById(id); if (!k) return;
+  const wf = Object.assign({}, k.workflow || {}); wf.reject_reason = reason;
+  if (reason === 'Hold ke bulan depan') {
+    const nm = nextMonthOf(k.campaign_month);
+    wf.hold_remind = true;
+    await KOLStore.patchKOL(id, { status: 'HOLD', campaign_month: nm, workflow: wf });
+    try { await KOLStore.setLatestUpdate(`⏰ @${k.handle} di-hold ke ${nm || 'bulan depan'} — ingatkan lagi.`, aiByName()); } catch (e) {}
+    openDrawer(id); renderTracker(); renderJuni(); renderKPIs(); renderLatestUpdate(); renderPool();
+    toast(`Hold → ${nm || 'bulan depan'}, diingatkan`);
+    return;
+  }
+  await KOLStore.patchKOL(id, { workflow: wf });
+  openDrawer(id); renderTracker();
+  toast('Alasan reject: ' + reason);
+}
+
+// ── Scope Kerjasama (PKS) — stored in workflow.pks + readable summary in scope ──
+function pksSummary(pks) { return (pks || []).filter(p => +p.qty > 0).map(p => `${p.type} x${p.qty}`).join(', '); }
+async function pksSet(id, pks) {
+  const k = KOLStore.kolById(id); if (!k) return;
+  const wf = Object.assign({}, k.workflow || {}); wf.pks = pks;
+  await KOLStore.patchKOL(id, { workflow: wf, scope: pksSummary(pks) });
+}
+async function pksAdd(id, type) {
+  if (!type) return;
+  const k = KOLStore.kolById(id); const pks = ((k.workflow || {}).pks || []).slice();
+  if (pks.some(p => p.type === type)) return;
+  pks.push({ type, qty: 1 });
+  await pksSet(id, pks); openDrawer(id); renderTracker();
+}
+async function pksQty(id, type, qty) {
+  const k = KOLStore.kolById(id);
+  const pks = ((k.workflow || {}).pks || []).map(p => p.type === type ? { type, qty: Math.max(0, +qty || 0) } : p);
+  await pksSet(id, pks); renderTracker();   // don't reopen — keep focus in the qty field
+}
+async function pksRemove(id, type) {
+  const k = KOLStore.kolById(id);
+  const pks = ((k.workflow || {}).pks || []).filter(p => p.type !== type);
+  await pksSet(id, pks); openDrawer(id); renderTracker();
+}
+// produk is stored as collection NAMES → resolve back to KB collection ids for the handoff
+function collectionIdsFromProduk(produk) {
+  const db = window.HP_PRODUCT_DB; if (!db) return [];
+  const names = (produk || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  return (db.collections || []).filter(c => names.includes((c.name || '').toLowerCase())).map(c => c.id);
+}
+
+// upload a generated brief file → stored + workflow.brief_created set → hands to Rahmi
+async function briefAttach(id, inp) {
+  const f = inp && inp.files && inp.files[0];
+  if (!f) return;
+  if (f.size > 10 * 1024 * 1024) { toast('File terlalu besar (maks 10MB)'); return; }
+  if (KOLStore.mode !== 'backend') { toast('Perlu mode Shared (login) untuk unggah brief'); return; }
+  toast('Mengunggah brief…');
+  try {
+    const url = await KOLStore.uploadBrief(id, f);
+    if (!url) { toast('Gagal mengunggah brief'); return; }
+    toast('✓ Brief terlampir → diteruskan ke Rahmi');
+    openDrawer(id); renderTracker(); renderJuni();
+  } catch (e) { toast('Gagal mengunggah brief'); }
+}
+
+// hand off to the dashboard's Brief Generator with the full decision context mapped
 function openBriefHandoff(id) {
   const k = KOLStore.kolById(id); if (!k) return;
-  const rec = (window.KOL_INTEL) ? KOL_INTEL.recommendFor(k) : {};
+  const collections = collectionIdsFromProduk(k.produk);
   const payload = {
     handle: k.handle,
-    niche: k.niche || (rec.contentLabel || ''),
-    notes: [k.angle, k.notes_hasna].filter(Boolean).join(' — '),
-    briefType: k.brief_type || rec.briefType || '',
-    collection: rec.collection ? rec.collection.id : '',
+    niche: k.niche || '',
+    notes: [k.notes_hasna, k.internal_notes].filter(Boolean).join(' — '), // internal, for personalization (not printed in brief)
+    angle: (k.angle || '').trim(),                                          // blank → brief shows "Diserahkan ke creator"
+    briefType: k.brief_type || '',
+    tier: BRIEF_TO_TIER[k.brief_type] || '',
+    month: k.campaign_month || '',
+    cash: k.rate_cash || '',
+    barter: k.rate_barter || '',
+    collections,                                                            // array of KB collection ids
+    collection: collections[0] || '',                                      // back-compat single
   };
   if (window.parent && window.parent !== window && typeof window.parent.hpOpenBrief === 'function') {
     window.parent.hpOpenBrief(payload);
@@ -612,6 +712,182 @@ function exportData() {
   a.click();
   toast('Export JSON diunduh');
 }
+
+// ── §1b AI DECISION ASSISTANT ─────────────────────────────────
+// Alex types plain language → ai.js (Claude) proposes structured actions →
+// shown here → Alex confirms → applied via the same handlers as manual edits.
+const AI_API = '/.netlify/functions/ai';
+let _aiActions = [];                       // current proposal
+
+function aiAutoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px'; }
+function aiKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiAsk(); } }
+function aiByName() { return (window.HP_MEMBER && window.HP_MEMBER.name) || 'AI'; }
+function aiToken() { try { return window.HP_TOKEN || (window.parent && window.parent.HP_TOKEN) || ''; } catch (e) { return ''; } }
+function aiResolve(handle) {
+  const h = (handle || '').trim().toLowerCase().replace(/^@/, '');
+  if (!h) return null;
+  return KOLStore.kol.find(k => (k.handle || '').trim().toLowerCase().replace(/^@/, '') === h) || null;
+}
+
+async function aiAsk() {
+  const input = $('#aiInput');
+  const instruction = (input.value || '').trim();
+  const out = $('#aiResult');
+  if (!instruction) { input.focus(); return; }
+  if (KOLStore.mode !== 'backend' || !aiToken()) {
+    out.innerHTML = `<div class="ai-err">Asisten AI butuh mode <b>Shared (live)</b> — login dulu di dashboard utama, lalu buka tab ini lagi.</div>`;
+    return;
+  }
+  const btn = $('#aiSend');
+  btn.disabled = true; _aiActions = [];
+  out.innerHTML = `<div class="ai-thinking">Menafsirkan instruksi & membaca pipeline…</div>`;
+
+  // Compact context — only fields the model needs.
+  const kol = KOLStore.kol.map(k => ({
+    handle: k.handle, status: k.status, decision: k.decision || '',
+    campaign_month: k.campaign_month || '', produk: k.produk || '',
+    rate_cash: Number(k.rate_cash) || 0, rate_barter: Number(k.rate_barter) || 0,
+    tier: k.tier || '', niche: k.niche || '',
+    angle: k.angle || '', notes_hasna: k.notes_hasna || '', last_offer: k.last_offer || '',
+  }));
+
+  try {
+    const r = await fetch(AI_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + aiToken() },
+      body: JSON.stringify({ instruction, kol }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { out.innerHTML = `<div class="ai-err">${esc(aiErrText(data))}</div>`; return; }
+    aiRenderProposal(data);
+  } catch (e) {
+    out.innerHTML = `<div class="ai-err">Gagal menghubungi asisten. Cek koneksi & coba lagi.</div>`;
+  } finally { btn.disabled = false; }
+}
+
+function aiErrText(d) {
+  const map = {
+    ai_unconfigured: 'Asisten belum aktif: tambahkan ANTHROPIC_API_KEY di Netlify (Environment variables) lalu redeploy.',
+    ai_auth_failed: 'API key Anthropic tidak valid — periksa di Netlify.',
+    ai_rate_limited: 'Sedang sibuk, coba lagi sebentar.',
+    auth_required: 'Sesi login berakhir — refresh halaman.',
+    forbidden: 'Akun ini tidak punya akses ke asisten.',
+  };
+  return map[d && d.error] || (d && d.hint) || (d && d.detail) || 'Asisten tidak tersedia saat ini.';
+}
+
+function aiRenderProposal(data) {
+  const out = $('#aiResult');
+  const raw = Array.isArray(data.actions) ? data.actions : [];
+  // Keep only actions that resolve to a real KOL (or need no handle).
+  _aiActions = raw.map(a => {
+    const noHandle = a.op === 'set_latest_update' || a.op === 'none';
+    const k = noHandle ? null : aiResolve(a.handle);
+    return { ...a, _id: k ? k.id : null, _ok: noHandle || !!k, _applied: false };
+  }).filter(a => a.op !== 'none');
+
+  let html = '';
+  if (data.summary) html += `<div class="ai-summary">${esc(data.summary)}</div>`;
+  if (data.clarify) html += `<div class="ai-clarify">❓ ${esc(data.clarify)}</div>`;
+
+  if (_aiActions.length) {
+    html += '<div class="ai-actions">';
+    _aiActions.forEach((a, i) => {
+      const bad = !a._ok;
+      html += `<div class="ai-act" id="aiAct${i}">
+        <div class="ai-act-main">
+          <div class="ai-act-line">${aiActionLine(a, bad)}</div>
+          ${a.reason ? `<div class="ai-act-reason">${esc(a.reason)}</div>` : ''}
+        </div>
+        ${bad
+          ? `<button class="ai-act-skip" disabled>tak ditemukan</button>`
+          : `<button class="ai-act-apply" onclick="aiApplyOne(${i})">Terapkan</button>`}
+      </div>`;
+    });
+    html += '</div>';
+    const anyOk = _aiActions.some(a => a._ok);
+    html += `<div class="ai-bar">
+      ${anyOk ? `<button class="ai-apply-all" onclick="aiApplyAll()">✓ Terapkan semua (${_aiActions.filter(a => a._ok).length})</button>` : ''}
+      <button class="ai-dismiss" onclick="aiDismiss()">Tutup</button>
+    </div>`;
+  } else if (!data.clarify) {
+    html += `<div class="ai-bar"><button class="ai-dismiss" onclick="aiDismiss()">Tutup</button></div>`;
+  }
+  out.innerHTML = html;
+}
+
+function aiActionLine(a, bad) {
+  const h = a.handle ? `<span class="h">@${esc(a.handle)}</span>` : '';
+  const v = esc(a.value || '');
+  switch (a.op) {
+    case 'set_status':       return `${h} → status <b>${esc(a.value)}</b>${a.decision ? ` · ${esc(a.decision)}` : ''}`;
+    case 'set_month':        return `${h} → bulan <b>${v}</b>`;
+    case 'set_products':     return `${h} → produk <b>${v}</b>`;
+    case 'set_cash':         return `${h} → cash <b>${fmtRp(Number(a.value) || 0)}</b>`;
+    case 'set_barter':       return `${h} → barter <b>${fmtRp(Number(a.value) || 0)}</b>`;
+    case 'add_note':         return `${h} → catatan: ${v}`;
+    case 'set_latest_update':return `Latest Update → "${v}"`;
+    default:                 return `${h} ${esc(a.op)} ${v}`;
+  }
+}
+
+async function aiApplyOne(i) {
+  const a = _aiActions[i];
+  if (!a || !a._ok || a._applied) return;
+  const ok = await aiExec(a);
+  if (ok) {
+    a._applied = true;
+    const el = $('#aiAct' + i);
+    if (el) { el.classList.add('applied'); const b = el.querySelector('.ai-act-apply'); if (b) { b.disabled = true; b.textContent = '✓ Diterapkan'; } }
+    renderAll();
+  }
+}
+
+async function aiApplyAll() {
+  const bar = $('#aiResult .ai-apply-all'); if (bar) bar.disabled = true;
+  let n = 0;
+  for (let i = 0; i < _aiActions.length; i++) {
+    const a = _aiActions[i];
+    if (!a._ok || a._applied) continue;
+    if (await aiExec(a)) {
+      a._applied = true; n++;
+      const el = $('#aiAct' + i);
+      if (el) { el.classList.add('applied'); const b = el.querySelector('.ai-act-apply'); if (b) { b.disabled = true; b.textContent = '✓ Diterapkan'; } }
+    }
+  }
+  closeDrawer(); renderAll();
+  toast(`${n} keputusan diterapkan`);
+}
+
+// Map one proposed action to the real handlers. Mirrors advanceStatus/patchField
+// but without opening the drawer (so apply-all doesn't flicker).
+async function aiExec(a) {
+  const id = a._id;
+  try {
+    switch (a.op) {
+      case 'set_status': {
+        if (!STATUSES.includes(a.value)) return false;
+        const patch = { status: a.value };
+        if (a.decision) { patch.decision = a.decision; patch.decision_date = today(); }
+        await KOLStore.patchKOL(id, patch);
+        return true;
+      }
+      case 'set_month':    await KOLStore.patchKOL(id, { campaign_month: a.value }); return true;
+      case 'set_products': await KOLStore.patchKOL(id, { produk: a.value }); return true;
+      case 'set_cash':     await KOLStore.patchKOL(id, { rate_cash: Number(a.value) || 0 }); return true;
+      case 'set_barter':   await KOLStore.patchKOL(id, { rate_barter: Number(a.value) || 0 }); return true;
+      case 'add_note': {
+        const prev = KOLStore.negotiationsFor(id)[0];
+        await KOLStore.addNegotiation({ kol_id: id, log_date: today(), round: ((prev && prev.round) || 0) + 1, notes: a.value, logged_by: aiByName() });
+        return true;
+      }
+      case 'set_latest_update': await KOLStore.setLatestUpdate(a.value, aiByName()); return true;
+      default: return false;
+    }
+  } catch (e) { return false; }
+}
+
+function aiDismiss() { _aiActions = []; $('#aiResult').innerHTML = ''; $('#aiInput').value = ''; aiAutoGrow($('#aiInput')); }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 boot();

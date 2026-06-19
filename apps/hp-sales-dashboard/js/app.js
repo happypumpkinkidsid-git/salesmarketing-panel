@@ -169,7 +169,9 @@ async function loadAllData() {
   }
 
   updateBadges();
-  renderSection(state.section);
+  // Don't auto-re-render the Brief Generator (a form) or the embedded Command
+  // Center (an iframe) on interval refresh — it would wipe in-progress work.
+  if (state.section !== 'kol' && state.section !== 'kol-program') renderSection(state.section);
   if (btn) btn.classList.remove('spinning');
 }
 
@@ -182,7 +184,7 @@ function useSampleData() {
   state.kols         = CONFIG.sampleKOL || [];
   state.usingSheet   = false;
   document.getElementById('lastRefreshLabel').textContent = 'Sample data (no Sheet connected)';
-  renderSection(state.section);
+  if (state.section !== 'kol' && state.section !== 'kol-program') renderSection(state.section);
   updateBadges();
 }
 
@@ -1519,7 +1521,7 @@ function kolUpdateHookSuggestions() {
   const container = document.getElementById('kb_hook_suggestions');
   if (!container) return;
   const tierKey  = document.getElementById('kb_tier')?.value || 'mid';
-  const prods    = [...document.querySelectorAll('input[name="kb_products"]:checked')].map(el => el.value);
+  const prods    = kolSelectedProds();
   const nicheText= document.getElementById('kb_niche')?.value || '';
   const suggestions = kolGetHookSuggestions(tierKey, prods, nicheText);
   const tier = HP_TIERS_DB[tierKey];
@@ -1686,22 +1688,12 @@ function renderKOLBrief() {
               <div class="kol-prod-row">
                 ${(window.HP_PRODUCT_DB?.collections || []).map(c => `
                   <label class="kol-prod-chip">
-                    <input type="checkbox" name="kb_collections" value="${c.id}">
+                    <input type="checkbox" name="kb_collections" value="${c.id}" ${c.id === 'active' ? 'checked' : ''} onchange="kolUpdateHookSuggestions()">
                     <span class="kol-prod-name">${c.name}</span>
                     <span class="kol-prod-type">${(c.kicker && (c.kicker.id || c.kicker.en)) || ''}</span>
                   </label>`).join('')}
               </div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Brief memakai story / show / hooks dari Product Database untuk tiap koleksi terpilih.</div>
-            </div>
-            <div class="kol-prod-row">
-              ${Object.entries(HP_PRODUCTS_DB).map(([name, p]) => `
-                <label class="kol-prod-chip">
-                  <input type="checkbox" name="kb_products" value="${name}"
-                    ${['Sunny Days','ActiveKnit'].includes(name) ? 'checked' : ''}
-                    onchange="kolUpdateHookSuggestions()">
-                  <span class="kol-prod-name">${name}</span>
-                  <span class="kol-prod-type">${p.type}</span>
-                </label>`).join('')}
             </div>
             <div style="margin-top:12px">
               <div class="kol-sub-lbl" style="margin-bottom:5px">Bulan Campaign</div>
@@ -1801,13 +1793,21 @@ function kolSelectTier(tier) {
 
 // --- Generate ---
 
+// Single source of products: derived from the selected KB collections (the only
+// collection selector). Collections with a legacy USP card map to its name.
+const PROD_FROM_COLLECTION = { active: 'ActiveKnit', pureknit: 'PureKnit', ultracool: 'UltraCool', softair: 'SoftAir', breathe: 'BreatheKnit' };
+function kolSelectedProds() {
+  const ids = [...document.querySelectorAll('input[name="kb_collections"]:checked')].map(el => el.value);
+  return [...new Set(ids.map(id => PROD_FROM_COLLECTION[id]).filter(Boolean))];
+}
+
 function generateKOLBrief() {
   const rawIg    = (document.getElementById('kb_ig')?.value    || '').trim();
   const slug     = kolParseHandle(rawIg);
   const handle   = slug ? '@' + slug : '@kol';
   const tierKey  = document.getElementById('kb_tier')?.value   || 'mid';
   const tier     = HP_TIERS_DB[tierKey];
-  const prods    = [...document.querySelectorAll('input[name="kb_products"]:checked')].map(el => el.value);
+  const prods    = kolSelectedProds();
   const month    = document.getElementById('kb_month')?.value  || '';
   const hook     = (document.getElementById('kb_hook')?.value  || '').trim();
   const cashFee  = (document.getElementById('kb_cash')?.value  || '').trim();
@@ -1820,8 +1820,7 @@ function generateKOLBrief() {
   const tiktok   = document.getElementById('kb_tiktok')?.checked || false;
   const collectionIds = [...document.querySelectorAll('input[name="kb_collections"]:checked')].map(el => el.value);
 
-  if (!hook)         { showToast('Angle / tema wajib diisi ya!'); return; }
-  if (!prods.length) { showToast('Pilih minimal 1 produk!');      return; }
+  if (!collectionIds.length) { showToast('Pilih minimal 1 koleksi!'); return; }
 
   const data = { handle, slug, tier, tierKey, prods, month, hook, cashFee, barter, refUrl,
                  pic, picWa, nicheText, notes, tiktok, collectionIds };
@@ -2031,8 +2030,7 @@ html,body{background:#d9d6cd;margin:0;padding:0;font-family:"Plus Jakarta Sans",
         <div>
           ${specRow('IG Handle', handleAt, niche.label)}
           ${specRow('Produk', prodsLabel, [...new Set(prods.map(p => HP_PRODUCTS_DB[p]?.range||''))].filter(Boolean).join(', ') + ' · Sampel via WhatsApp')}
-          ${specRow('Angle / Tema', `<span style="font-size:12.5px;font-style:italic;color:#3A3C55">${hook||'—'}</span>`)}
-          ${d.notes ? specRow('Catatan', `<span style="font-size:12px;font-weight:500;color:#5A5C75">${escHtml(d.notes)}</span>`) : ''}
+          ${specRow('Angle / Tema', `<span style="font-size:12.5px;font-style:italic;color:#3A3C55">${hook || 'Diserahkan ke creator'}</span>`)}
         </div>
         <div style="border-left:1px dashed #E8E3D6;padding-left:16px">
           ${specRow('Tipe Brief', tier.label, tier.sublabel)}
@@ -2153,7 +2151,7 @@ function copyKOLClaudePrompt() {
   const ig      = (document.getElementById('kb_ig')?.value    || '').trim();
   const handle  = ig ? '@' + kolParseHandle(ig) : '@kol';
   const tier    = document.getElementById('kb_tier')?.value  || 'mid';
-  const prods   = [...document.querySelectorAll('input[name="kb_products"]:checked')].map(el => el.value).join(', ');
+  const prods   = kolSelectedProds().join(', ');
   const hook    = document.getElementById('kb_hook')?.value  || '';
   const cash    = document.getElementById('kb_cash')?.value  || '';
   const barter  = document.getElementById('kb_barter')?.value|| '';
@@ -2865,6 +2863,19 @@ function kolFilteredData() {
 window.hpOpenBrief = function (p) {
   p = p || {};
   navigate('kol');
+  const ID_MONTHS = { januari:'01', februari:'02', maret:'03', april:'04', mei:'05', juni:'06', juli:'07', agustus:'08', september:'09', oktober:'10', november:'11', desember:'12' };
+  const toMonthInput = (m) => {
+    if (!m) return '';
+    if (/^\d{4}-\d{2}$/.test(m)) return m;                         // already YYYY-MM
+    const parts = String(m).trim().toLowerCase().split(/\s+/);     // "Juni 2026"
+    if (parts.length === 2 && ID_MONTHS[parts[0]] && /^\d{4}$/.test(parts[1])) return `${parts[1]}-${ID_MONTHS[parts[0]]}`;
+    return '';
+  };
+  const fmtAmt = (v) => {
+    if (v === '' || v == null) return '';
+    const n = Number(v);
+    return (isFinite(n) && n > 0) ? n.toLocaleString('id-ID') : String(v);
+  };
   setTimeout(() => {
     const ig = document.getElementById('kb_ig');
     if (ig && p.handle) { ig.value = String(p.handle).replace(/^@/, ''); try { kolHandleUsernameInput(ig.value); } catch (e) {} }
@@ -2872,10 +2883,19 @@ window.hpOpenBrief = function (p) {
     if (niche && p.niche) { niche.value = p.niche; try { kolUpdateNicheHelper(p.niche); } catch (e) {} }
     const notes = document.getElementById('kb_notes');
     if (notes && p.notes) notes.value = p.notes;
-    if (p.briefType) { const tk = { 'Soft-selling': 'soft', 'Mid-selling': 'mid', 'Hard-selling': 'hard' }[p.briefType]; if (tk) try { kolSelectTier(tk); } catch (e) {} }
-    if (p.collection) { const cb = document.querySelector(`input[name="kb_collections"][value="${p.collection}"]`); if (cb) cb.checked = true; }
-    const hk = document.getElementById('kb_hook');
-    if (hk && p.hook) hk.value = p.hook;
+    // Tier: explicit if mapped from Tipe Brief, else derived from briefType label
+    const tk = p.tier || ({ 'Soft-selling': 'soft', 'Mid-selling': 'mid', 'Hard-selling': 'hard' }[p.briefType]);
+    if (tk) try { kolSelectTier(tk); } catch (e) {}
+    // Collections: uncheck all, then check exactly the mapped ones
+    const cols = (p.collections && p.collections.length) ? p.collections : (p.collection ? [p.collection] : []);
+    if (cols.length) document.querySelectorAll('input[name="kb_collections"]').forEach(cb => { cb.checked = cols.includes(cb.value); });
+    // Month, cash, barter
+    const mEl = document.getElementById('kb_month'); const mi = toMonthInput(p.month); if (mEl && mi) mEl.value = mi;
+    const cashEl = document.getElementById('kb_cash'); if (cashEl && p.cash !== '' && p.cash != null) cashEl.value = fmtAmt(p.cash);
+    const barEl  = document.getElementById('kb_barter'); if (barEl && p.barter !== '' && p.barter != null) barEl.value = fmtAmt(p.barter);
+    // Angle: blank → brief prints "Diserahkan ke creator"
+    const hk = document.getElementById('kb_hook'); if (hk) hk.value = p.angle || p.hook || '';
+    try { kolUpdateHookSuggestions(); } catch (e) {}
     try { showToast('✦ Brief di-prefill dari Command Center'); } catch (e) {}
     window.scrollTo(0, 0);
   }, 280);
