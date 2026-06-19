@@ -200,29 +200,40 @@ function kpi(label, num, sub, tone) {
     <div class="kpi-sub">${sub}</div></div>`;
 }
 
-// ── §3 ACTIVE CAMPAIGN — JUNI ─────────────────────────────────
+// ── §3 ACTIVE CAMPAIGN — kanban board by workflow stage ───────
+// Whole active pipeline (everyone except CANCEL), bucketed by nextStep().stage,
+// each card colour-coded by whose job is next (Alex=purple, Hasna=green, Rahmi=amber).
 function renderJuni() {
-  const juni = KOLStore.kol.filter(k => k.in_juni)
-    .sort((a, b) => (b.rate_cash || 0) - (a.rate_cash || 0));
-  $('#juniCount').textContent = juni.length;
-  $('#juni').innerHTML = juni.map(k => `
-    <div class="jcard" onclick="openDrawer('${k.id}')">
-      <div class="jcard-top">
-        <div class="avatar">${initials(k.handle)}</div>
-        <div class="jcard-id">
-          <div class="jcard-handle">@${esc(k.handle)}</div>
-          <div class="jcard-tier">${esc(k.tier || '—')}</div>
-        </div>
-        <span class="chip ${statusClass(k.status)}">${esc(k.status)}</span>
-      </div>
-      ${k.brief_type ? `<span class="brief-tag brief-${k.brief_type.split('-')[0].toLowerCase()}">${esc(k.brief_type)}</span>` : ''}
-      ${k.produk ? `<div class="jcard-prod">📦 ${esc(k.produk)}</div>` : ''}
-      <div class="jcard-angle">${esc(k.angle || '—')}</div>
-      <div class="jcard-foot">
-        <span>${k.rate_cash ? '💵 ' + fmtRpShort(k.rate_cash) : '🎁 barter'}${k.rate_barter ? ' + ' + fmtRpShort(k.rate_barter) : ''}</span>
-        ${k.ref_link ? `<a href="${esc(k.ref_link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">ref ↗</a>` : ''}
-      </div>
-    </div>`).join('');
+  const active = KOLStore.kol.filter(k => k.status !== 'CANCEL');
+  $('#juniCount').textContent = active.length;
+  const COLS = [...WF_STAGES, ['hold', 'Hold']];   // 6 stages + a muted Hold column
+  const buckets = {}; COLS.forEach(([key]) => buckets[key] = []);
+  active.forEach(k => {
+    const st = nextStep(k).stage;
+    (buckets[st] || buckets.source).push(k);
+  });
+  $('#juni').innerHTML = `<div class="kanban">${COLS.map(([key, label]) => {
+    const items = (buckets[key] || []).sort((a, b) => (b.rate_cash || 0) - (a.rate_cash || 0));
+    if (key === 'hold' && !items.length) return '';
+    return `<div class="kb-col${key === 'hold' ? ' kb-col-hold' : ''}">
+      <div class="kb-col-head"><span>${label}</span><span class="kb-col-n">${items.length}</span></div>
+      <div class="kb-col-body">${items.map(kanbanCard).join('') || '<div class="kb-empty">—</div>'}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+function kanbanCard(k) {
+  const ns = nextStep(k);
+  const o = WF_OWNER[ns.owner];
+  const accent = o ? o.c : '#9aa3b5';
+  const bg = o ? o.bg : '#eef0f5';
+  return `<div class="kb-card" style="border-left-color:${accent}" onclick="openDrawer('${k.id}')">
+    <div class="kb-card-top">
+      <span class="kb-card-handle">@${esc(k.handle)}</span>
+      <span class="chip ${statusClass(k.status)}">${esc(k.status)}</span>
+    </div>
+    <div class="kb-card-tier">${esc(k.tier || '—')}${k.rate_cash ? ' · ' + fmtRpShort(k.rate_cash) : ''}</div>
+    <div class="kb-card-next" style="background:${bg};color:${accent}">${ns.owner ? esc(ns.owner) + ' · ' : ''}${esc(ns.label)}</div>
+  </div>`;
 }
 
 // ── §4 KOL TRACKER (management decisions) ─────────────────────
@@ -633,12 +644,20 @@ function collectionIdsFromProduk(produk) {
   return (db.collections || []).filter(c => names.includes((c.name || '').toLowerCase())).map(c => c.id);
 }
 
+// Ensure we're on the live backend (login token may have arrived after boot).
+async function ensureBackend() {
+  if (KOLStore.mode === 'backend') return true;
+  if (!aiToken()) return false;            // genuinely not logged in
+  try { await KOLStore.init(); } catch (e) {}   // re-attempt now that the token is present
+  return KOLStore.mode === 'backend';
+}
+
 // upload a generated brief file → stored + workflow.brief_created set → hands to Rahmi
 async function briefAttach(id, inp) {
   const f = inp && inp.files && inp.files[0];
   if (!f) return;
   if (f.size > 10 * 1024 * 1024) { toast('File terlalu besar (maks 10MB)'); return; }
-  if (KOLStore.mode !== 'backend') { toast('Perlu mode Shared (login) untuk unggah brief'); return; }
+  if (!(await ensureBackend())) { toast('Belum tersambung ke server — login di dashboard lalu refresh tab ini.'); return; }
   toast('Mengunggah brief…');
   try {
     const url = await KOLStore.uploadBrief(id, f);
@@ -753,8 +772,8 @@ async function aiAsk() {
   const instruction = (input.value || '').trim();
   const out = $('#aiResult');
   if (!instruction) { input.focus(); return; }
-  if (KOLStore.mode !== 'backend' || !aiToken()) {
-    out.innerHTML = `<div class="ai-err">Asisten AI butuh mode <b>Shared (live)</b> — login dulu di dashboard utama, lalu buka tab ini lagi.</div>`;
+  if (!(await ensureBackend())) {
+    out.innerHTML = `<div class="ai-err">Asisten AI butuh mode <b>Shared (live)</b> — login dulu di dashboard utama, lalu refresh tab ini.</div>`;
     return;
   }
   const btn = $('#aiSend');
@@ -909,4 +928,11 @@ async function aiExec(a) {
 function aiDismiss() { _aiActions = []; $('#aiResult').innerHTML = ''; $('#aiInput').value = ''; aiAutoGrow($('#aiInput')); }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
-boot();
+// Defer boot to DOMContentLoaded so auth.js has set the login token first
+// (it registers its handler earlier, in <head>), avoiding a false "local" mode.
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  if (document.readyState === 'complete') boot();
+  else document.addEventListener('DOMContentLoaded', boot);
+} else {
+  document.addEventListener('DOMContentLoaded', boot);
+}
