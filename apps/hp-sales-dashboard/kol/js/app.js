@@ -450,6 +450,9 @@ function openDrawer(id) {
         </div>
       </div>
 
+      <label class="dr-full">📦 Produk Dikirim <span class="dr-hint">dari Google Sheet</span>
+        <input type="text" value="${esc(wf.produk_dikirim || '')}" placeholder="produk yang dikirim ke KOL…" onchange="patchDikirim('${id}',this.value)"></label>
+
       <label class="dr-full">Angle / Tema Utama <span class="dr-hint">kosong = Diserahkan ke creator</span>
         <textarea rows="2" placeholder="Kosongkan untuk beri kebebasan kreator…" onchange="patchField('${id}','angle',this.value)">${esc(k.angle||'')}</textarea></label>
       <label class="dr-full">Reference Content Link
@@ -616,6 +619,13 @@ async function pksRemove(id, type) {
   const pks = ((k.workflow || {}).pks || []).filter(p => p.type !== type);
   await pksSet(id, pks); openDrawer(id); renderTracker();
 }
+// Produk Dikirim (what was actually shipped) — stored in workflow.produk_dikirim
+async function patchDikirim(id, val) {
+  const k = KOLStore.kolById(id); if (!k) return;
+  const wf = Object.assign({}, k.workflow || {}); wf.produk_dikirim = val;
+  await KOLStore.patchKOL(id, { workflow: wf });
+}
+
 // produk is stored as collection NAMES → resolve back to KB collection ids for the handoff
 function collectionIdsFromProduk(produk) {
   const db = window.HP_PRODUCT_DB; if (!db) return [];
@@ -654,6 +664,8 @@ function openBriefHandoff(id) {
     barter: k.rate_barter || '',
     collections,                                                            // array of KB collection ids
     collection: collections[0] || '',                                      // back-compat single
+    pks: (k.workflow || {}).pks || [],                                     // scope kerjasama
+    dikirim: (k.workflow || {}).produk_dikirim || '',                      // produk dikirim (from sheet)
   };
   let handed = false;
   try {

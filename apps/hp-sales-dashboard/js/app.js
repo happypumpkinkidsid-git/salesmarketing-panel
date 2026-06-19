@@ -1741,6 +1741,24 @@ function renderKOLBrief() {
           </div>
         </div>
 
+        <!-- Block 5b: Scope Kerjasama (PKS) + Produk Dikirim -->
+        <div class="kol-block">
+          <div class="kol-block-num">5b</div>
+          <div class="kol-block-body">
+            <label class="kol-lbl">📋 Scope Kerjasama (PKS)</label>
+            <div id="kb_pks_list" class="kb-pks-list"></div>
+            <div class="kb-pks-add">
+              <select id="kb_pks_sel" class="kol-inp" style="flex:1"></select>
+              <button type="button" class="kb-pks-add-btn" onclick="kolPksAdd(document.getElementById('kb_pks_sel').value)">Tambah</button>
+            </div>
+            <div style="margin-top:14px">
+              <div class="kol-sub-lbl" style="margin-bottom:5px">Produk Dikirim
+                <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.7"> — dari Google Sheet</span></div>
+              <input class="kol-inp" id="kb_dikirim" type="text" placeholder="produk yang dikirim ke KOL…">
+            </div>
+          </div>
+        </div>
+
         <!-- Block 06: Referensi -->
         <div class="kol-block">
           <div class="kol-block-num">06</div>
@@ -1793,7 +1811,9 @@ function renderKOLBrief() {
   `;
 
   // Restore any saved draft, then auto-save on every edit
+  kolBriefPks = [];
   kolRestoreDraft();
+  kolPksRender();
   const formCol = el.querySelector('.kol-form-col');
   if (formCol) {
     formCol.addEventListener('input', kolSaveDraft);
@@ -1812,7 +1832,9 @@ function kolCollectFormState() {
     ig: v('kb_ig'), tiktok: ck('kb_tiktok'), niche: v('kb_niche'), notes: v('kb_notes'),
     tier: v('kb_tier'), month: v('kb_month'), hook: v('kb_hook'), cash: v('kb_cash'),
     barter: v('kb_barter'), ref: v('kb_ref'), pic: v('kb_pic'), picWa: v('kb_pic_wa'),
+    dikirim: v('kb_dikirim'),
     collections: [...document.querySelectorAll('input[name="kb_collections"]:checked')].map(e => e.value),
+    pks: kolBriefPks,
   };
 }
 function kolSaveDraft() {
@@ -1824,6 +1846,8 @@ function kolRestoreDraft() {
   const set = (id, val) => { const e = document.getElementById(id); if (e && val != null) e.value = val; };
   set('kb_ig', d.ig); set('kb_niche', d.niche); set('kb_notes', d.notes); set('kb_month', d.month);
   set('kb_hook', d.hook); set('kb_cash', d.cash); set('kb_barter', d.barter); set('kb_ref', d.ref);
+  set('kb_dikirim', d.dikirim);
+  if (Array.isArray(d.pks)) kolBriefPks = d.pks;
   if (d.pic != null && d.pic !== '') set('kb_pic', d.pic);
   if (d.picWa != null && d.picWa !== '') set('kb_pic_wa', d.picWa);
   const tt = document.getElementById('kb_tiktok'); if (tt) tt.checked = !!d.tiktok;
@@ -1840,6 +1864,38 @@ function kolResetBrief() {
   try { localStorage.removeItem(KOL_DRAFT_KEY); } catch (e) {}
   renderKOLBrief();             // re-render blank (default tier + ActiveKnit collection)
   try { showToast('Brief dikosongkan'); } catch (e) {}
+}
+
+// ── Scope Kerjasama (PKS) — mirrors the Command Center drawer ──
+const KB_PKS_TYPES = ['Tiktok Video', 'IG Reels', 'IG Story', 'Add on Taplink Story', 'IG Post', 'IG Carousel', 'Shopee Video', 'Collab Post', 'Content Owning'];
+let kolBriefPks = [];
+function kolPksRender() {
+  const list = document.getElementById('kb_pks_list');
+  if (!list) return;
+  list.innerHTML = kolBriefPks.length
+    ? kolBriefPks.map(p => `
+      <div class="kb-pks-item">
+        <span class="kb-pks-type">${escHtml(p.type)}</span>
+        <input class="kb-pks-qty" type="number" min="0" value="${p.qty}" onchange="kolPksQty('${p.type}', this.value)">
+        <button type="button" class="kb-pks-x" onclick="kolPksRemove('${p.type}')">✕</button>
+      </div>`).join('')
+    : '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Belum ada scope.</div>';
+  const sel = document.getElementById('kb_pks_sel');
+  if (sel) sel.innerHTML = '<option value="">+ Tambah jenis konten…</option>' +
+    KB_PKS_TYPES.filter(t => !kolBriefPks.some(p => p.type === t)).map(t => `<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('');
+}
+function kolPksAdd(type) {
+  if (!type || kolBriefPks.some(p => p.type === type)) return;
+  kolBriefPks.push({ type, qty: 1 });
+  kolPksRender(); kolSaveDraft();
+}
+function kolPksQty(type, qty) {
+  kolBriefPks = kolBriefPks.map(p => p.type === type ? { type, qty: Math.max(0, +qty || 0) } : p);
+  kolSaveDraft();
+}
+function kolPksRemove(type) {
+  kolBriefPks = kolBriefPks.filter(p => p.type !== type);
+  kolPksRender(); kolSaveDraft();
 }
 
 function kolSelectTier(tier) {
@@ -1882,7 +1938,7 @@ function generateKOLBrief() {
   if (!collectionIds.length) { showToast('Pilih minimal 1 koleksi!'); return; }
 
   const data = { handle, slug, tier, tierKey, prods, month, hook, cashFee, barter, refUrl,
-                 pic, picWa, nicheText, notes, tiktok, collectionIds };
+                 pic, picWa, nicheText, notes, tiktok, collectionIds, pks: kolBriefPks };
   const briefHtml = kolBuildBriefHTML(data);
 
   window._kolBriefHtml   = briefHtml;
@@ -2094,7 +2150,12 @@ html,body{background:#d9d6cd;margin:0;padding:0;font-family:"Plus Jakarta Sans",
           ${specRow('Tipe Brief', tier.label, tier.sublabel)}
           ${specRow('Bulan Tayang', monthLabel, 'Tanggal final via WhatsApp')}
           ${specRow('Kompensasi', `<span style="font-size:12.5px">${feeStr}</span>`)}
-          ${specRow('Format', `<span style="font-size:11.5px;font-weight:500">${formatStr}${refHtml?' · Ref: '+refHtml:''}</span>`)}
+          ${(() => {
+            const pl = (d.pks || []).filter(p => p.type && +p.qty > 0);
+            const lbl = pl.length ? 'Scope (PKS)' : 'Format';
+            const val = pl.length ? pl.map(p => `${p.type} ×${p.qty}`).join(' · ') : formatStr;
+            return specRow(lbl, `<span style="font-size:11.5px;font-weight:500">${val}${refHtml ? ' · Ref: ' + refHtml : ''}</span>`);
+          })()}
         </div>
       </div>
     `)}
@@ -2943,6 +3004,9 @@ window.hpOpenBrief = function (p) {
     const barEl  = document.getElementById('kb_barter'); if (barEl && p.barter !== '' && p.barter != null) barEl.value = fmtAmt(p.barter);
     // Angle: blank → brief prints "Diserahkan ke creator"
     const hk = document.getElementById('kb_hook'); if (hk) hk.value = p.angle || p.hook || '';
+    // PKS scope + Produk Dikirim (from the Command Center / sheet)
+    if (Array.isArray(p.pks)) { kolBriefPks = p.pks; try { kolPksRender(); } catch (e) {} }
+    const dk = document.getElementById('kb_dikirim'); if (dk && p.dikirim) dk.value = p.dikirim;
     try { kolUpdateHookSuggestions(); } catch (e) {}
     try { kolSaveDraft(); } catch (e) {}   // Command Center handoff overwrites the saved draft
     try { showToast('✦ Brief di-prefill dari Command Center'); } catch (e) {}

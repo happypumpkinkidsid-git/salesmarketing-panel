@@ -1535,3 +1535,14 @@ textarea.kol-inp { padding: 9px 10px; }
 .hp-auth-card button:hover{background:#E06810}
 #hp-userbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;margin:0 0 8px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11.5px;color:rgba(255,255,255,.7)}
 #hp-userbar button{background:rgba(255,255,255,.12);border:none;color:#fff;font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;cursor:pointer}
+
+/* Brief Generator: Scope Kerjasama (PKS) */
+.kb-pks-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 9px; }
+.kb-pks-item { display: flex; align-items: center; gap: 9px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; }
+.kb-pks-type { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
+.kb-pks-qty { width: 62px; font-family: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; text-align: center; }
+.kb-pks-x { border: none; background: #f4f6fa; color: var(--text-muted); width: 26px; height: 26px; border-radius: 7px; cursor: pointer; font-size: 12px; }
+.kb-pks-x:hover { background: #fdecec; color: #d64545; }
+.kb-pks-add { display: flex; gap: 8px; align-items: stretch; }
+.kb-pks-add-btn { font-family: inherit; font-size: 12.5px; font-weight: 700; border: none; background: var(--primary); color: #fff; border-radius: 8px; padding: 8px 15px; cursor: pointer; white-space: nowrap; }
+.kb-pks-add-btn:hover { background: var(--primary-dark); }
