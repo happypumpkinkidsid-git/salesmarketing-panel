@@ -927,6 +927,19 @@ async function aiExec(a) {
 
 function aiDismiss() { _aiActions = []; $('#aiResult').innerHTML = ''; $('#aiInput').value = ''; aiAutoGrow($('#aiInput')); }
 
+// ── Live sync across team / devices ───────────────────────────
+// Re-pull the shared backend on tab focus + every 90s so a change one teammate
+// makes appears for everyone without a manual reload. Skips while a drawer is
+// open or an AI proposal is pending, so it never disrupts an in-progress edit.
+async function kolRefresh() {
+  if (drawerId || (typeof _aiActions !== 'undefined' && _aiActions.length)) return;
+  if (KOLStore.mode !== 'backend') return;
+  try { await KOLStore.init(); renderAll(); } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) kolRefresh(); });
+window.addEventListener('focus', kolRefresh);
+setInterval(() => { if (!document.hidden) kolRefresh(); }, 90000);
+
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 // Defer boot to DOMContentLoaded so auth.js has set the login token first
 // (it registers its handler earlier, in <head>), avoiding a false "local" mode.
