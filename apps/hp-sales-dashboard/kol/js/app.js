@@ -117,12 +117,19 @@ function committedBarter() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────
+let _booting = false;
 async function boot() {
-  const mode = await KOLStore.init();
+  if (_booting) return;                    // re-entrant guard (auth-ready can fire while booting)
+  _booting = true;
   const badge = $('#modeBadge');
-  if (mode === 'backend') { badge.textContent = '● Shared (live)'; badge.className = 'mode-badge online'; }
-  else { badge.textContent = '● Local (this device)'; badge.className = 'mode-badge local'; }
+  if (badge && KOLStore.mode !== 'backend') { badge.textContent = '● Menyambungkan…'; badge.className = 'mode-badge local'; }
+  const mode = await KOLStore.init();
+  if (badge) {
+    if (mode === 'backend') { badge.textContent = '● Shared (live)'; badge.className = 'mode-badge online'; }
+    else { badge.textContent = '● Tidak tersambung — refresh'; badge.className = 'mode-badge local'; }
+  }
   renderAll();
+  _booting = false;
 }
 
 function renderAll() {
@@ -949,11 +956,15 @@ window.addEventListener('focus', kolRefresh);
 setInterval(() => { if (!document.hidden) kolRefresh(); }, 90000);
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
-// Defer boot to DOMContentLoaded so auth.js has set the login token first
-// (it registers its handler earlier, in <head>), avoiding a false "local" mode.
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  if (document.readyState === 'complete') boot();
-  else document.addEventListener('DOMContentLoaded', boot);
-} else {
-  document.addEventListener('DOMContentLoaded', boot);
+
+// LIVE-ONLY boot: connect to the backend once the login token is ready.
+// auth.js fires 'hp-auth-ready' when the token is set (embedded inherit OR a
+// standalone full-tab login that resolves asynchronously). This is what makes
+// "Buka di tab penuh" show live data instead of a stale local snapshot.
+window.addEventListener('hp-auth-ready', boot);
+function startCommandCenter() {
+  if (window.HP_AUTH_READY || aiToken()) boot();      // token already available (embedded / fast session)
+  else setTimeout(() => { if (KOLStore.mode !== 'backend') boot(); }, 6000);  // safety net (shows "tidak tersambung")
 }
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startCommandCenter);
+else startCommandCenter();

@@ -47,7 +47,6 @@ const KOLStore = (() => {
         cache = { kol: data.kol, negotiations: data.negotiations || [], state: data.state || {} };
       }
       mode = 'backend';
-      saveLocal();          // mirror cloud → localStorage so the offline fallback never goes stale
       return true;
     } catch (e) { return false; }
   }
@@ -58,9 +57,12 @@ const KOLStore = (() => {
     get negotiations() { return cache.negotiations; },
     get state()        { return cache.state; },
 
+    // Command Center is LIVE-ONLY: never fall back to a stale local cache. If the
+    // backend can't be reached we report 'offline' and the UI shows a reconnect
+    // state — so what's on screen is always the shared cloud data, never stale.
     async init() {
       const ok = await tryBackend();
-      if (!ok) { cache = loadLocal(); mode = 'local'; }
+      if (!ok) { cache = { kol: [], negotiations: [], state: {} }; mode = 'offline'; }
       return mode;
     },
 
@@ -69,7 +71,6 @@ const KOLStore = (() => {
     async patchKOL(id, patch) {
       const k = this.kolById(id); if (!k) return;
       Object.assign(k, patch);
-      saveLocal();          // keep the localStorage mirror current in both modes
       if (mode === 'backend') await post({ action: 'patch_kol', id, patch });
     },
 

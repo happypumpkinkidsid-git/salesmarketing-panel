@@ -52,6 +52,13 @@
   }
   function errScreen(m) { ov(`<div class="hp-auth-card"><div class="hp-auth-logo">🎃 Happy <b>Pumpkin</b></div><div class="hp-auth-err">${m}</div></div>`); }
 
+  // Signal that the login token is available (consumed by the Command Center so
+  // it connects to the live backend instead of booting before auth resolves).
+  function fireAuthReady() {
+    window.HP_AUTH_READY = true;
+    try { window.dispatchEvent(new Event('hp-auth-ready')); } catch (e) {}
+  }
+
   async function afterLogin(session) {
     if (!session) { loginScreen(); return; }
     let role, name;
@@ -59,11 +66,19 @@
       const { data } = await sb.from('members').select('name,role').eq('email', session.user.email).maybeSingle();
       if (!data) { await sb.auth.signOut(); loginScreen('Akun ini belum terdaftar sebagai member.'); return; }
       role = data.role; name = data.name;
-    } catch (e) { errScreen('Gagal memuat profil member. Refresh halaman.'); return; }
+      try { localStorage.setItem('hp_member', JSON.stringify({ email: session.user.email, name, role })); } catch (e) {}
+    } catch (e) {
+      // Offline / network blip → reuse the last cached profile for the same account
+      // so the dashboard (and the offline-capable Brief Generator) still loads.
+      let c; try { c = JSON.parse(localStorage.getItem('hp_member') || 'null'); } catch (e2) {}
+      if (c && c.email === session.user.email) { role = c.role; name = c.name; }
+      else { errScreen('Gagal memuat profil member. Refresh halaman.'); return; }
+    }
     window.HP_MEMBER = { email: session.user.email, name, role };
     window.HP_TOKEN = session.access_token;
     applyRole(role);
     hide();
+    fireAuthReady();
   }
 
   function applyRole(role) {
@@ -114,6 +129,7 @@
         window.HP_TOKEN = window.parent.HP_TOKEN;
         window.HP_MEMBER = window.parent.HP_MEMBER;
       } catch (e) {}
+      fireAuthReady();
       return;
     }
     ov(`<div class="hp-auth-card"><div class="hp-auth-logo">🎃 Happy <b>Pumpkin</b></div><div class="hp-auth-sub">Memuat…</div></div>`);
