@@ -47,6 +47,7 @@ const KOLStore = (() => {
         cache = { kol: data.kol, negotiations: data.negotiations || [], state: data.state || {} };
       }
       mode = 'backend';
+      saveLocal();          // mirror cloud → localStorage so the offline fallback never goes stale
       return true;
     } catch (e) { return false; }
   }
@@ -68,8 +69,8 @@ const KOLStore = (() => {
     async patchKOL(id, patch) {
       const k = this.kolById(id); if (!k) return;
       Object.assign(k, patch);
+      saveLocal();          // keep the localStorage mirror current in both modes
       if (mode === 'backend') await post({ action: 'patch_kol', id, patch });
-      else saveLocal();
     },
 
     negotiationsFor(kolId) {
