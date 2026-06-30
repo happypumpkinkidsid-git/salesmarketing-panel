@@ -1876,16 +1876,23 @@ function kolPksRender() {
     ? kolBriefPks.map(p => `
       <div class="kb-pks-item">
         <span class="kb-pks-type">${escHtml(p.type)}</span>
-        <input class="kb-pks-qty" type="number" min="0" value="${p.qty}" onchange="kolPksQty('${p.type}', this.value)">
-        <button type="button" class="kb-pks-x" onclick="kolPksRemove('${p.type}')">✕</button>
+        <input class="kb-pks-qty" type="number" min="0" value="${p.qty}" onchange="kolPksQty(${kbJsq(p.type)}, this.value)">
+        <button type="button" class="kb-pks-x" onclick="kolPksRemove(${kbJsq(p.type)})">✕</button>
       </div>`).join('')
     : '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Belum ada scope.</div>';
   const sel = document.getElementById('kb_pks_sel');
   if (sel) sel.innerHTML = '<option value="">+ Tambah jenis konten…</option>' +
-    KB_PKS_TYPES.filter(t => !kolBriefPks.some(p => p.type === t)).map(t => `<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('');
+    KB_PKS_TYPES.filter(t => !kolBriefPks.some(p => p.type === t)).map(t => `<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('') +
+    '<option value="__custom__">✏️ Ketik sendiri…</option>';
 }
+const kbJsq = s => "'" + String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ') + "'";
 function kolPksAdd(type) {
-  if (!type || kolBriefPks.some(p => p.type === type)) return;
+  if (!type) return;
+  if (type === '__custom__') {                       // free-text custom scope
+    type = (prompt('Jenis konten (ketik sendiri):') || '').trim();
+    if (!type) return;
+  }
+  if (kolBriefPks.some(p => p.type === type)) return;
   kolBriefPks.push({ type, qty: 1 });
   kolPksRender(); kolSaveDraft();
 }

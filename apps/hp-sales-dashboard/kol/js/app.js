@@ -77,6 +77,9 @@ function advanceBtns(id, k) {
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// safe single-quoted JS string literal for inline onclick="…" attributes (handles
+// quotes/backslashes/newlines so custom values can't break the attribute)
+const jsq = s => "'" + String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ') + "'";
 const fmtRp = n => 'Rp ' + (Number(n) || 0).toLocaleString('id-ID');
 const fmtRpShort = n => {
   n = Number(n) || 0;
@@ -438,7 +441,7 @@ function openDrawer(id) {
       <div class="dr-reject">
         <div class="dr-reject-lbl">Alasan Reject</div>
         <div class="dr-reject-pills">
-          ${REJECT_REASONS.map(r => `<button class="reject-pill ${wf.reject_reason===r?'on':''}" onclick="setRejectReason('${id}',${JSON.stringify(r)})">${esc(r)}</button>`).join('')}
+          ${REJECT_REASONS.map(r => `<button class="reject-pill ${wf.reject_reason===r?'on':''}" onclick="setRejectReason('${id}',${jsq(r)})">${esc(r)}</button>`).join('')}
         </div>
         ${wf.reject_reason==='Hold ke bulan depan' ? `<div class="dr-reject-note">→ dipindah ke HOLD &amp; bulan berikutnya; kamu akan diingatkan.</div>` : ''}
       </div>` : ''}
@@ -449,13 +452,14 @@ function openDrawer(id) {
         ${pks.length ? pks.map(p => `
           <div class="pks-item">
             <span class="pks-type">${esc(p.type)}</span>
-            <input class="pks-qty" type="number" min="0" value="${p.qty}" onchange="pksQty('${id}',${JSON.stringify(p.type)},this.value)">
-            <button class="pks-x" onclick="pksRemove('${id}',${JSON.stringify(p.type)})">✕</button>
+            <input class="pks-qty" type="number" min="0" value="${p.qty}" onchange="pksQty('${id}',${jsq(p.type)},this.value)">
+            <button class="pks-x" onclick="pksRemove('${id}',${jsq(p.type)})">✕</button>
           </div>`).join('') : '<div class="muted" style="font-size:12px;padding:4px 0">Belum ada scope.</div>'}
         <div class="pks-add">
           <select id="pksSel_${id}">
             <option value="">+ Tambah jenis konten…</option>
             ${PKS_TYPES.filter(t => !pks.some(p => p.type === t)).map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('')}
+            <option value="__custom__">✏️ Ketik sendiri…</option>
           </select>
           <button class="pks-add-btn" onclick="pksAdd('${id}', document.getElementById('pksSel_${id}').value)">Tambah</button>
         </div>
@@ -615,8 +619,12 @@ async function pksSet(id, pks) {
 }
 async function pksAdd(id, type) {
   if (!type) return;
+  if (type === '__custom__') {                       // free-text custom scope (e.g. "bundle carousel threads")
+    type = (prompt('Jenis konten (ketik sendiri):') || '').trim();
+    if (!type) return;
+  }
   const k = KOLStore.kolById(id); const pks = ((k.workflow || {}).pks || []).slice();
-  if (pks.some(p => p.type === type)) return;
+  if (pks.some(p => p.type === type)) { toast('Sudah ada'); return; }
   pks.push({ type, qty: 1 });
   await pksSet(id, pks); openDrawer(id); renderTracker();
 }
