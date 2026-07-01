@@ -2074,38 +2074,38 @@ function kolBuildBriefHTML(d) {
   const kbIds = d.collectionIds || (d.collectionId ? [d.collectionId] : []);
   if (kbIds.length && window.HP_PRODUCT_DB) {
     const ID = o => (o && (o.id || o.en)) || '';
-    const bullets = (arr, clr) => (arr || []).map(it =>
-      `<div style="display:grid;grid-template-columns:14px 1fr;gap:7px;font-size:11.5px;line-height:1.45;margin-bottom:5px;color:#3a4254"><span style="color:${clr};font-weight:800">›</span><span>${ID(it)}</span></div>`).join('');
+    // condensed bullets — small + tight so multiple cards fit one A4 page
+    const bullets = (arr, clr, n) => (arr || []).slice(0, n).map(it =>
+      `<div style="display:grid;grid-template-columns:12px 1fr;gap:5px;font-size:10px;line-height:1.35;margin-bottom:3px;color:#3a4254"><span style="color:${clr};font-weight:800">›</span><span>${ID(it)}</span></div>`).join('');
+    const single = kbIds.length <= 1;
     kbBlock = kbIds.map(cid => {
       const col = (window.HP_PRODUCT_DB.collections || []).find(c => c.id === cid);
       if (!col) return '';
       const colColor = (typeof PDB_COLORS !== 'undefined' && PDB_COLORS[col.id]) || tier.color;
       return `
-      <div style="margin-top:14px;background:#FDFAF5;border:1.5px solid #E8E3D6;border-top:3px solid ${colColor};border-radius:10px;padding:13px 15px">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
-          <span style="font-weight:800;font-size:13.5px;color:${colColor}">📚 ${col.name}</span>
-          <span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8A8CA0;font-weight:700">Knowledge Base</span>
-        </div>
-        <div style="font-size:11.5px;font-style:italic;color:#5A5C75;margin-bottom:8px">${ID(col.oneLiner)}</div>
-        <div style="font-size:11px;background:#fff;border:1px solid #E8E3D6;border-left:3px solid ${colColor};border-radius:8px;padding:8px 10px;margin-bottom:10px;color:#3a4254"><b>Material:</b> ${ID(col.material)}</div>
-        ${lc('Talking Points', '#2E6A5E')}${bullets(col.say, '#2E6A5E')}
-        ${lc('Hindari', '#C9412A')}${bullets(col.avoid, '#C9412A')}
+      <div style="background:#FDFAF5;border:1px solid #E8E3D6;border-top:3px solid ${colColor};border-radius:9px;padding:9px 11px">
+        <div style="font-weight:800;font-size:12px;color:${colColor};margin-bottom:4px">📚 ${col.name}</div>
+        <div style="font-size:9.5px;color:#3a4254;background:#fff;border:1px solid #E8E3D6;border-left:2px solid ${colColor};border-radius:6px;padding:5px 8px;margin-bottom:7px"><b>Material:</b> ${ID(col.material)}</div>
+        ${lc('Talking Points', '#2E6A5E')}${bullets(col.say, '#2E6A5E', 3)}
+        ${lc('Hindari', '#C9412A')}${bullets(col.avoid, '#C9412A', 1)}
       </div>`;
     }).join('');
+    // 2-column grid when several collections are selected → compact, fits one page
+    kbBlock = `<div style="display:grid;grid-template-columns:${single ? '1fr' : '1fr 1fr'};gap:9px;margin-top:4px">${kbBlock}</div>`;
   }
 
   const PAGE_CSS = `
 *{box-sizing:border-box}
 html,body{background:#d9d6cd;margin:0;padding:0;font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .doc-wrap{display:flex;flex-direction:column;align-items:center;padding:32px 24px;gap:24px}
-.page{width:794px;min-height:1123px;background:#fff;position:relative;padding:58px 48px 54px;box-sizing:border-box;box-shadow:0 4px 24px rgba(0,0,0,.14);border-radius:3px;overflow:hidden;display:flex;flex-direction:column}
+.page{width:794px;height:1123px;background:#fff;position:relative;padding:58px 48px 54px;box-sizing:border-box;box-shadow:0 4px 24px rgba(0,0,0,.14);border-radius:3px;overflow:hidden;display:flex;flex-direction:column}
 .dh{position:absolute;top:20px;left:48px;right:48px;display:flex;align-items:center;justify-content:space-between;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8A8CA0;border-bottom:1px solid #F1ECDF;padding-bottom:10px;font-weight:700}
 .df{position:absolute;bottom:20px;left:48px;right:48px;display:flex;align-items:center;justify-content:space-between;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8A8CA0;border-top:1px solid #F1ECDF;padding-top:9px;font-weight:600}
 .pg{color:#1F2140}
 .hp-mark{display:inline-flex;align-items:center;gap:6px;color:#1F2140}
 .hp-dot{width:7px;height:7px;border-radius:999px;background:${tier.color};display:inline-block}
 .cp{position:absolute;top:-60px;right:-60px;width:280px;height:280px;background:radial-gradient(circle at 30% 30%,${tier.colorBg},transparent 68%);pointer-events:none;z-index:0}
-@media print{html,body{background:white}.doc-wrap{padding:0;gap:0}.page{box-shadow:none;margin:0;page-break-after:always;border-radius:0;min-height:auto}}`;
+@media print{html,body{background:white}.doc-wrap{padding:0;gap:0}.page{box-shadow:none;margin:0;page-break-after:always;page-break-inside:avoid;break-inside:avoid;border-radius:0;height:1123px;overflow:hidden}.page:last-child{page-break-after:auto}}`;
 
   return `<!DOCTYPE html>
 <html lang="id">

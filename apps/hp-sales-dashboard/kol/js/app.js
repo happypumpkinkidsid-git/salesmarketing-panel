@@ -30,7 +30,7 @@ const COLLECTION_ALIASES = {
   knitfashion:['knitted fashion','knitfashion','fashion'], woven:['woven','kemeja','collared shirt'],
   play:['playwear'], basic:['basicwear','essential','basic'], denim:['denim','soft denim'],
   sleep:['sleepwear','wonder set','wonderset','piyama','pajama','sleep'], breathe:['breatheknit','breathe knit','pointelle'],
-  softair:['softair','soft air','bamboo'], batik:['batik','kebaya'], raya:['raya','koko','gamis','lebaran','modest'],
+  softair:['softair','soft air'], batik:['batik','kebaya'], raya:['raya','koko','gamis','lebaran','modest'],
 };
 function collectionOn(produk, cid) {
   const p = (produk || '').toLowerCase();

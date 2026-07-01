@@ -1480,33 +1480,33 @@ window.HP_PRODUCT_DB = {
     },
     {
       "id": "softair",
-      "name": "SoftAir™ (Bamboo Cotton)",
+      "name": "SoftAir™",
       "kicker": {
         "en": "Babywear",
         "id": "Baju Bayi"
       },
       "oneLiner": {
-        "en": "\"Sleep better, feel softer, grow happier.\" Bamboo-cotton babywear — instant-cool, gentle on sensitive skin.",
-        "id": "\"Tidur lebih nyenyak, terasa lebih lembut.\" Baju bayi bambu-katun — sejuk seketika, lembut buat kulit sensitif."
+        "en": "\"Sleep better, feel softer, grow happier.\" Soft cotton babywear — instant-cool, gentle on sensitive skin.",
+        "id": "\"Tidur lebih nyenyak, terasa lebih lembut.\" Baju bayi katun lembut — sejuk seketika, lembut buat kulit sensitif."
       },
       "meta": [
         "Set Bayi",
         "NB–5/6Y",
-        "Bambu + Katun",
+        "Katun Lembut",
         "Kulit Sensitif"
       ],
       "material": {
-        "en": "Bamboo-cotton blend — instant-cool, air-flowing, gentle on sensitive skin.",
-        "id": "Campuran bambu-katun — sejuk seketika, beraliran udara, lembut buat kulit sensitif."
+        "en": "Soft cotton blend — instant-cool, air-flowing, gentle on sensitive skin.",
+        "id": "Campuran katun lembut — sejuk seketika, beraliran udara, lembut buat kulit sensitif."
       },
       "say": [
         {
-          "en": "Bamboo-cotton — instant-cool feel, air-flowing knit for tropical nights.",
-          "id": "Bambu-katun — sejuk seketika, rajutan beraliran udara buat malam tropis."
+          "en": "Soft cotton — instant-cool feel, air-flowing knit for tropical nights.",
+          "id": "Katun lembut — sejuk seketika, rajutan beraliran udara buat malam tropis."
         },
         {
-          "en": "Natural bamboo softness, gentle on sensitive baby skin.",
-          "id": "Kelembutan alami bambu, lembut di kulit bayi yang sensitif."
+          "en": "Naturally soft cotton, gentle on sensitive baby skin.",
+          "id": "Kelembutan katun alami, lembut di kulit bayi yang sensitif."
         },
         {
           "en": "The smart upgrade from ordinary sleepwear — stays soft & stretchy after many washes.",
@@ -1533,8 +1533,8 @@ window.HP_PRODUCT_DB = {
       ],
       "avoid": [
         {
-          "en": "Don't confuse it with BreatheKnit — this is bamboo-blend, cooling-led.",
-          "id": "Jangan ketuker sama BreatheKnit — ini campuran bambu, fokus ke sejuk."
+          "en": "Don't confuse it with BreatheKnit — this is the cooling-led soft cotton set.",
+          "id": "Jangan ketuker sama BreatheKnit — ini set katun lembut, fokus ke sejuk."
         },
         {
           "en": "Don't over-promise medical claims — keep to 'gentle on sensitive skin.'",
@@ -1551,9 +1551,9 @@ window.HP_PRODUCT_DB = {
           "id": "Sejuknya langsung kerasa."
         }
       ],
-      "hashtags": "#HappyPumpkin #SoftAir #BambuKatun #BajuBayi #TidurNyenyak",
+      "hashtags": "#HappyPumpkin #SoftAir #KatunLembut #BajuBayi #TidurNyenyak",
       "keywordCloud": [
-        "bambu",
+        "katun lembut",
         "katun",
         "sejuk",
         "instant cool",

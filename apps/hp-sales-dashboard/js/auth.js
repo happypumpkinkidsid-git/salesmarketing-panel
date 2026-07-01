@@ -28,7 +28,7 @@
 
   function loginScreen(msg) {
     ov(`<div class="hp-auth-card">
-      <div class="hp-auth-logo">🎃 Happy <b>Pumpkin</b></div>
+      <div class="hp-wordmark hp-auth-wordmark">happypumpkin</div>
       <div class="hp-auth-sub">Sales &amp; Marketing Panel</div>
       ${msg ? `<div class="hp-auth-err">${msg}</div>` : ''}
       <input id="hp-auth-email" type="email" placeholder="Email" autocomplete="username">
@@ -50,7 +50,7 @@
     const pwEl = document.getElementById('hp-auth-pw');
     pwEl.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
   }
-  function errScreen(m) { ov(`<div class="hp-auth-card"><div class="hp-auth-logo">🎃 Happy <b>Pumpkin</b></div><div class="hp-auth-err">${m}</div></div>`); }
+  function errScreen(m) { ov(`<div class="hp-auth-card"><div class="hp-wordmark hp-auth-wordmark">happypumpkin</div><div class="hp-auth-err">${m}</div></div>`); }
 
   // Signal that the login token is available (consumed by the Command Center so
   // it connects to the live backend instead of booting before auth resolves).
@@ -132,7 +132,7 @@
       fireAuthReady();
       return;
     }
-    ov(`<div class="hp-auth-card"><div class="hp-auth-logo">🎃 Happy <b>Pumpkin</b></div><div class="hp-auth-sub">Memuat…</div></div>`);
+    ov(`<div class="hp-auth-card"><div class="hp-wordmark hp-auth-wordmark">happypumpkin</div><div class="hp-auth-sub">Memuat…</div></div>`);
     loadCDN(async () => {
       try {
         sb = window.supabase.createClient(SB_URL, SB_ANON, { auth: { persistSession: true, autoRefreshToken: true } });
