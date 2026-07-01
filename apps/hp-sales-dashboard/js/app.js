@@ -3016,7 +3016,13 @@ window.hpOpenBrief = function (p) {
     const dk = document.getElementById('kb_dikirim'); if (dk && p.dikirim) dk.value = p.dikirim;
     try { kolUpdateHookSuggestions(); } catch (e) {}
     try { kolSaveDraft(); } catch (e) {}   // Command Center handoff overwrites the saved draft
-    try { showToast('✦ Brief di-prefill dari Command Center'); } catch (e) {}
+    // One-click auto brief: form is fully prefilled → generate immediately.
+    if (p.autoGenerate) {
+      try { generateKOLBrief(); } catch (e) {}
+      try { showToast('⚡ Brief otomatis dibuat — cek & edit bila perlu'); } catch (e) {}
+    } else {
+      try { showToast('✦ Brief di-prefill dari Command Center'); } catch (e) {}
+    }
     window.scrollTo(0, 0);
   }, 280);
 };

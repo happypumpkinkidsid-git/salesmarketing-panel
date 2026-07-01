@@ -351,6 +351,15 @@ tbody tr:last-child td{border-bottom:none}
 .dr-brief-cta.wait{background:#eef0f5;color:var(--muted)}
 .dr-brief-cta-hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:7px;line-height:1.45}
 .dr-brief-cta-hint.ok{color:var(--green);font-weight:600}
+/* one-click auto brief */
+.dr-autobrief-cta{display:block;width:100%;margin-top:22px;font-family:inherit;font-size:14px;font-weight:800;border:none;border-radius:10px;padding:13px;cursor:pointer;transition:.15s;background:linear-gradient(135deg,var(--green),#2bbf85);color:#fff;box-shadow:0 4px 14px rgba(31,157,107,.28)}
+.dr-autobrief-cta:hover{filter:brightness(.97)}
+.dr-autobrief-hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:7px;line-height:1.45}
+.dr-brief-cta.wait,.dr-brief-cta.ready{margin-top:12px}
+.dr-brief-cta.ready{font-size:13px}
+/* wait state stays usable — manual path is always available */
+.dr-brief-cta.wait{cursor:pointer}
+.dr-brief-cta.wait:hover{filter:brightness(.97)}
 
 /* Deal Rate: original ratecard text from the sheet */
 .dr-rate-src{font-size:11.5px;color:var(--muted);margin:-4px 0 9px;line-height:1.4}
@@ -371,6 +380,27 @@ tbody tr:last-child td{border-bottom:none}
 .kb-card-tier{font-size:10.5px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kb-card-next{font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;margin-top:7px;line-height:1.3}
 .kb-empty{font-size:11px;color:#aeb6c4;text-align:center;padding:10px 0}
+
+/* §2b Budget Bulanan — per-month ceilings */
+.budget-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}
+.bud-cell{background:#fff;border:1px solid var(--line);border-top:3px solid #c7cede;border-radius:11px;padding:12px 13px;box-shadow:0 1px 2px rgba(20,35,63,.05)}
+.bud-cell.past{opacity:.72}
+.bud-cell.cur{border-top-color:var(--orange);box-shadow:0 4px 14px rgba(255,122,26,.14)}
+.bud-cell.over{border-top-color:var(--red)}
+.bud-cell.bud-none{border-top-color:var(--amber);background:#fffaf0}
+.bud-mo{font-size:12px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.bud-now{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;background:var(--orange);color:#fff;border-radius:20px;padding:1px 7px}
+.bud-amt{font-size:20px;font-weight:800;color:var(--ink);margin-top:7px;line-height:1}
+.bud-bar{height:7px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0 6px}
+.bud-bar span{display:block;height:100%;background:var(--orange);border-radius:4px}
+.bud-cell.over .bud-bar span{background:var(--red)}
+.bud-cell:not(.cur):not(.over) .bud-bar span{background:#8b96ab}
+.bud-meta{font-size:11px;color:var(--muted);font-weight:600}
+.bud-cell.over .bud-meta{color:var(--red)}
+.bud-sub{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.4}
+.bud-none .bud-bar{display:none}
+@media(max-width:900px){.budget-strip{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.budget-strip{grid-template-columns:1fr}}
 
 /* happypumpkin wordmark logo */
 .hp-wordmark{font-family:'Quicksand','Plus Jakarta Sans',sans-serif;font-weight:700;color:var(--orange);letter-spacing:-.5px;line-height:1;white-space:nowrap;display:inline-block}

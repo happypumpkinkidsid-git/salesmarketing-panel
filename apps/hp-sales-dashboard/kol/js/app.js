@@ -21,7 +21,7 @@ const PKS_TYPES = ['Tiktok Video', 'IG Reels', 'IG Story', 'Add on Taplink Story
 const BRIEF_TO_TIER = { 'Soft-selling': 'soft', 'Mid-selling': 'mid', 'Hard-selling': 'hard' };
 
 // ── Workflow engine ───────────────────────────────────────────
-const MONTHS_OPTS = ['', 'Juni 2026','Juli 2026','Agustus 2026','September 2026','Oktober 2026','November 2026','Desember 2026'];
+const MONTHS_OPTS = ['', 'Mei 2026','Juni 2026','Juli 2026','Agustus 2026','September 2026','Oktober 2026','November 2026','Desember 2026'];
 const WF_OWNER = { Alex:{c:'#7a52cc',bg:'#f0ecfa'}, Hasna:{c:'#1f9d6b',bg:'#e6f6ef'}, Rahmi:{c:'#d98a00',bg:'#fff3df'} };
 const WF_STAGES = [['source','Sourcing'],['nego','Nego'],['approval','Approval'],['brief','Brief Prep'],['send','Kirim'],['done','Selesai']];
 // user product terms → KB collection id
@@ -104,16 +104,37 @@ function toast(msg) {
   clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// committed cash = DEAL/BARTER/SELESAI rate_cash
-function committedCash() {
-  return KOLStore.kol
-    .filter(k => ['DEAL','BARTER','SELESAI'].includes(k.status))
-    .reduce((s, k) => s + (Number(k.rate_cash) || 0), 0);
+// ── Monthly budget model ──────────────────────────────────────
+// Each month has its OWN Rp 15jt ceiling. A creator's cash lands on the month
+// of its campaign_month — a Juli deal must NOT eat into Juni's budget.
+const ID_MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const idMonthLabel = d => `${ID_MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+// Window: 2 months back → current → 2 months forward (rolls with today's date).
+function budgetWindow() {
+  const now = new Date();
+  const arr = [];
+  for (let off = -2; off <= 2; off++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + off, 1);
+    arr.push({ label: idMonthLabel(d), offset: off, isCurrent: off === 0 });
+  }
+  return arr;
 }
-function committedBarter() {
-  return KOLStore.kol
+// committed cash/barter bucketed by campaign_month ('' → __none__)
+function committedByMonth() {
+  const map = {};
+  KOLStore.kol
     .filter(k => ['DEAL','BARTER','SELESAI'].includes(k.status))
-    .reduce((s, k) => s + (Number(k.rate_barter) || 0), 0);
+    .forEach(k => {
+      const key = (k.campaign_month || '').trim() || '__none__';
+      const b = map[key] || (map[key] = { cash: 0, barter: 0, count: 0 });
+      b.cash   += Number(k.rate_cash)   || 0;
+      b.barter += Number(k.rate_barter) || 0;
+      b.count++;
+    });
+  return map;
+}
+function currentMonthCommitted() {
+  return committedByMonth()[idMonthLabel(new Date())] || { cash: 0, barter: 0, count: 0 };
 }
 
 // ── INIT ──────────────────────────────────────────────────────
@@ -135,6 +156,7 @@ async function boot() {
 function renderAll() {
   renderLatestUpdate();
   renderKPIs();
+  renderBudget();
   renderJuni();
   renderTracker();
   renderPool();
@@ -147,11 +169,11 @@ function renderLatestUpdate() {
   const deals = kol.filter(k => ['DEAL','BARTER'].includes(k.status)).length;
   const nego  = kol.filter(k => k.status === 'NEGOSIASI').length;
   const pend  = kol.filter(k => ['PENDING','HOLD'].includes(k.status)).length;
-  const cash  = committedCash();
+  const curMo = currentMonthCommitted();
 
   const summary =
     `<b>${deals}</b> deal terkonfirmasi · <b>${nego}</b> negosiasi · <b>${pend}</b> menunggu keputusan · ` +
-    `<b>${fmtRpShort(cash)}</b> cash committed dari ${fmtRpShort(BUDGET_CEILING)}`;
+    `<b>${fmtRpShort(curMo.cash)}</b> cash committed ${esc(idMonthLabel(new Date()))} (dari ${fmtRpShort(BUDGET_CEILING)})`;
 
   $('#latestUpdate').innerHTML = `
     <div class="lu-head">
@@ -186,10 +208,10 @@ function renderKPIs() {
   const nego   = kol.filter(k => k.status === 'NEGOSIASI').length;
   const pend   = kol.filter(k => ['PENDING','HOLD'].includes(k.status)).length;
   const cands  = kol.filter(k => k.status === 'KANDIDAT').length;
-  const cash   = committedCash();
-  const barter = committedBarter();
-  const pct    = Math.min(100, Math.round(cash / BUDGET_CEILING * 100));
-  const over   = cash > BUDGET_CEILING;
+  const curMo  = currentMonthCommitted();
+  const curLbl = idMonthLabel(new Date());
+  const pct    = Math.min(100, Math.round(curMo.cash / BUDGET_CEILING * 100));
+  const over   = curMo.cash > BUDGET_CEILING;
 
   $('#kpis').innerHTML = `
     ${kpi('Deal aktif', deals, 'cash + barter', 'accent')}
@@ -197,11 +219,43 @@ function renderKPIs() {
     ${kpi('Menunggu keputusan', pend, 'pending + hold', 'blue')}
     ${kpi('Kandidat pool', cands, 'belum diproses', 'muted')}
     <div class="kpi kpi-budget ${over ? 'over' : ''}">
-      <div class="kpi-label">Cash committed</div>
-      <div class="kpi-num">${fmtRpShort(cash)}</div>
+      <div class="kpi-label">Budget ${esc(curLbl)}</div>
+      <div class="kpi-num">${fmtRpShort(curMo.cash)}</div>
       <div class="kpi-bar"><span style="width:${pct}%"></span></div>
-      <div class="kpi-sub">${pct}% dari ${fmtRpShort(BUDGET_CEILING)} · barter ${fmtRpShort(barter)}</div>
+      <div class="kpi-sub">${pct}% dari ${fmtRpShort(BUDGET_CEILING)} · barter ${fmtRpShort(curMo.barter)}</div>
     </div>`;
+}
+
+// ── §2b MONTHLY BUDGET STRIP ──────────────────────────────────
+// Per-month Rp 15jt ceilings across a 5-month window (2 back → 2 forward).
+function renderBudget() {
+  const el = $('#budgetStrip'); if (!el) return;
+  const byMonth = committedByMonth();
+  let html = budgetWindow().map(w => {
+    const d = byMonth[w.label] || { cash: 0, barter: 0, count: 0 };
+    const pct    = Math.min(100, Math.round(d.cash / BUDGET_CEILING * 100));
+    const over   = d.cash > BUDGET_CEILING;
+    const remain = BUDGET_CEILING - d.cash;
+    const past   = w.offset < 0;
+    return `<div class="bud-cell${w.isCurrent ? ' cur' : ''}${over ? ' over' : ''}${past ? ' past' : ''}">
+      <div class="bud-mo">${esc(w.label)}${w.isCurrent ? '<span class="bud-now">bulan ini</span>' : ''}</div>
+      <div class="bud-amt">${fmtRpShort(d.cash)}</div>
+      <div class="bud-bar"><span style="width:${pct}%"></span></div>
+      <div class="bud-meta">${pct}% terpakai · sisa ${over ? '−' + fmtRpShort(Math.abs(remain)) : fmtRpShort(remain)}</div>
+      <div class="bud-sub">${d.count} deal${d.barter ? ` · barter ${fmtRpShort(d.barter)}` : ''}</div>
+    </div>`;
+  }).join('');
+  // Committed but not yet scheduled to a month → nudge to assign.
+  const none = byMonth['__none__'];
+  if (none && none.cash > 0) {
+    html += `<div class="bud-cell bud-none">
+      <div class="bud-mo">Belum dijadwalkan</div>
+      <div class="bud-amt">${fmtRpShort(none.cash)}</div>
+      <div class="bud-meta">${none.count} deal tanpa bulan campaign</div>
+      <div class="bud-sub">pilih <b>Bulan Campaign</b> agar masuk anggaran bulan</div>
+    </div>`;
+  }
+  el.innerHTML = html;
 }
 function kpi(label, num, sub, tone) {
   return `<div class="kpi tone-${tone}">
@@ -509,8 +563,12 @@ function openDrawer(id) {
         ${k.kontak_wa ? `<a href="https://wa.me/${esc(k.kontak_wa.replace(/[^0-9]/g,''))}" target="_blank" rel="noopener">WhatsApp ↗</a>` : ''}
       </div>
 
+      <button class="dr-autobrief-cta" onclick="autoBrief('${id}')">
+        ⚡ Show Auto-Generated Brief
+      </button>
+      <div class="dr-autobrief-hint">Brief langsung jadi dari data yang ada (produk, tier, angle di-isi otomatis kalau kosong). Bisa diedit manual setelahnya.</div>
       <button class="dr-brief-cta ${isDeal && (k.campaign_month||'').trim() && (k.produk||'').trim() ? 'ready' : 'wait'}" onclick="openBriefHandoff('${id}')">
-        ✦ Buat Brief di Generator →
+        ✦ Buat / Edit Manual di Generator →
       </button>
       ${isDeal && (k.campaign_month||'').trim() && (k.produk||'').trim()
         ? `<div class="dr-brief-cta-hint ok">Semua kotak penting terisi — siap dibuatkan brief.</div>`
@@ -683,16 +741,26 @@ async function briefAttach(id, inp) {
 }
 
 // hand off to the dashboard's Brief Generator with the full decision context mapped
-function openBriefHandoff(id) {
-  const k = KOLStore.kolById(id); if (!k) return;
-  const collections = collectionIdsFromProduk(k.produk);
-  const payload = {
+// Build the generator payload from a creator card. When enrich=true, gaps are
+// filled from the intelligence layer so a one-click brief always has enough to render.
+function briefPayloadFor(k, enrich) {
+  let collections = collectionIdsFromProduk(k.produk);
+  let briefType = k.brief_type || '';
+  let angle = (k.angle || '').trim();
+  if (enrich) {
+    const rec = (window.KOL_INTEL) ? KOL_INTEL.recommendFor(k) : null;
+    if (!collections.length && rec && rec.collection) collections = [rec.collection.id];
+    if (!collections.length) collections = ['softair'];             // safe, broadly-usable default
+    if (!briefType) briefType = (rec && rec.briefType) || 'Mid-selling';
+    if (!angle && rec) angle = rec.angle || '';                     // suggested angle (still editable)
+  }
+  return {
     handle: k.handle,
     niche: k.niche || '',
     notes: [k.notes_hasna, k.internal_notes].filter(Boolean).join(' — '), // internal, for personalization (not printed in brief)
-    angle: (k.angle || '').trim(),                                          // blank → brief shows "Diserahkan ke creator"
-    briefType: k.brief_type || '',
-    tier: BRIEF_TO_TIER[k.brief_type] || '',
+    angle,                                                                 // blank → brief shows "Diserahkan ke creator"
+    briefType,
+    tier: BRIEF_TO_TIER[briefType] || '',
     month: k.campaign_month || '',
     cash: k.rate_cash || '',
     barter: k.rate_barter || '',
@@ -701,6 +769,9 @@ function openBriefHandoff(id) {
     pks: (k.workflow || {}).pks || [],                                     // scope kerjasama
     dikirim: (k.workflow || {}).produk_dikirim || '',                      // produk dikirim (from sheet)
   };
+}
+// Hand the payload to the dashboard's Brief Generator (embedded parent, else full-tab redirect).
+function handoffBrief(payload) {
   let handed = false;
   try {
     if (window.parent && window.parent !== window && typeof window.parent.hpOpenBrief === 'function') {
@@ -713,6 +784,16 @@ function openBriefHandoff(id) {
     try { localStorage.setItem('hp_brief_payload', JSON.stringify({ ...payload, _ts: Date.now() })); } catch (e) {}
     window.location.href = '../index.html#kol';
   }
+}
+// Manual path — prefill the generator form, user reviews/edits, then hits Generate.
+function openBriefHandoff(id) {
+  const k = KOLStore.kolById(id); if (!k) return;
+  handoffBrief(briefPayloadFor(k, false));
+}
+// One-click path — enrich gaps from intelligence + auto-generate the brief immediately.
+function autoBrief(id) {
+  const k = KOLStore.kolById(id); if (!k) return;
+  handoffBrief({ ...briefPayloadFor(k, true), autoGenerate: true });
 }
 
 // apply a Creative Fit suggestion into a field
