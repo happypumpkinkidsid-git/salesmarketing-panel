@@ -278,11 +278,23 @@ function kpi(label, num, sub, tone) {
     <div class="kpi-sub">${sub}</div></div>`;
 }
 
+// ── GLOBAL SEARCH — one query filters kanban + tracker + pool ─
+let globalQ = '';
+function matchesGlobal(k) {
+  if (!globalQ) return true;
+  return [k.handle, k.nama, k.niche, k.produk, k.campaign_month, k.status, k.tier]
+    .filter(Boolean).join(' ').toLowerCase().includes(globalQ);
+}
+function onGlobalSearch(v) {
+  globalQ = String(v || '').toLowerCase().trim();
+  renderJuni(); renderTracker(); renderPool();
+}
+
 // ── §3 ACTIVE CAMPAIGN — kanban board by workflow stage ───────
 // Whole active pipeline (everyone except CANCEL), bucketed by nextStep().stage,
 // each card colour-coded by whose job is next (Alex=purple, Hasna=green, Rahmi=amber).
 function renderJuni() {
-  const active = KOLStore.kol.filter(k => k.status !== 'CANCEL');
+  const active = KOLStore.kol.filter(k => k.status !== 'CANCEL' && matchesGlobal(k));
   $('#juniCount').textContent = active.length;
   const COLS = [...WF_STAGES, ['hold', 'Hold']];   // 6 stages + a muted Hold column
   const buckets = {}; COLS.forEach(([key]) => buckets[key] = []);
@@ -317,7 +329,7 @@ function kanbanCard(k) {
 // ── §4 KOL TRACKER (management decisions) ─────────────────────
 let trackerFilter = 'working';
 function trackerSet() {
-  const all = KOLStore.kol;
+  const all = KOLStore.kol.filter(matchesGlobal);
   if (trackerFilter === 'all') return all;
   if (trackerFilter === 'working')
     return all.filter(k => k.in_juni || k.status !== 'KANDIDAT' || k.decision);
@@ -359,7 +371,7 @@ function renderTracker() {
 // ── §5 KOL POOL (sourcing) ────────────────────────────────────
 let poolSearch = '', poolTier = '', poolStatus = '';
 function renderPool() {
-  let rows = KOLStore.kol.slice();
+  let rows = KOLStore.kol.filter(matchesGlobal);
   if (poolSearch)  rows = rows.filter(k => (k.handle + ' ' + (k.nama||'') + ' ' + (k.niche||'')).toLowerCase().includes(poolSearch));
   if (poolTier)    rows = rows.filter(k => k.tier === poolTier);
   if (poolStatus)  rows = rows.filter(k => k.status === poolStatus);
@@ -522,6 +534,28 @@ function openDrawer(id) {
         ${wf.reject_reason==='Hold ke bulan depan' ? `<div class="dr-reject-note">→ dipindah ke HOLD &amp; bulan berikutnya; kamu akan diingatkan.</div>` : ''}
       </div>` : ''}
 
+      <!-- NEGOTIATION LOG -->
+      <details class="dr-neg-log" ${negs.length ? '' : ''}>
+        <summary>🤝 Riwayat Negosiasi <span class="neg-n">${negs.length ? negs.length + ' ronde' : 'belum ada'}</span></summary>
+        ${renderNegList(negs)}
+        <div class="neg-add">
+          <div class="neg-add-grid">
+            <label>Tanggal<input type="date" id="ng_date" value="${today()}"></label>
+            <label>Ronde<input type="number" id="ng_round" min="1" value="${negs.length + 1}"></label>
+            <label>HP Cash<input type="number" id="ng_hpc" min="0" step="50000" placeholder="0"></label>
+            <label>HP Barter<input type="number" id="ng_hpb" min="0" step="50000" placeholder="0"></label>
+            <label>KOL Cash<input type="number" id="ng_kc" min="0" step="50000" placeholder="0"></label>
+            <label>KOL Barter<input type="number" id="ng_kb" min="0" step="50000" placeholder="0"></label>
+            <label>Hasil<select id="ng_agreed"><option value="false">Belum sepakat</option><option value="true">DEAL ✓</option></select></label>
+            <label>Dicatat oleh<input type="text" id="ng_by" value="${esc((window.HP_MEMBER && HP_MEMBER.name) || '')}"></label>
+          </div>
+          <input type="hidden" id="ng_items">
+          <label class="neg-full">Catatan<input type="text" id="ng_notes" placeholder="mis. minta naik ke 2jt + produk"></label>
+          <label class="neg-full">Next step<input type="text" id="ng_next" placeholder="mis. follow up Senin"></label>
+          <button class="btn btn-primary neg-save" onclick="addNeg('${id}')">+ Catat Ronde</button>
+        </div>
+      </details>
+
       <!-- SCOPE KERJASAMA (PKS) -->
       <div class="dr-section">📋 Scope Kerjasama (PKS) <span class="dr-section-sub">jenis konten + jumlah</span></div>
       <div class="dr-pks">
@@ -588,8 +622,23 @@ function openDrawer(id) {
       ${isDeal && (k.campaign_month||'').trim() && (k.produk||'').trim()
         ? `<div class="dr-brief-cta-hint ok">Semua kotak penting terisi — siap dibuatkan brief.</div>`
         : `<div class="dr-brief-cta-hint">Lengkapi <b>Status DEAL</b>, <b>Bulan</b>, &amp; <b>Produk</b> agar konteks ter-map penuh ke generator.</div>`}
+      ${hpRole() === 'owner' ? `
+      <button class="dr-delete" onclick="deleteKOLConfirm('${id}')">🗑 Hapus KOL ini (permanen)</button>` : ''}
     </div>`;
   $('#drawerWrap').classList.add('open');
+}
+// member role, own window or parent (embedded)
+function hpRole() {
+  try { return (window.HP_MEMBER || (window.parent && window.parent.HP_MEMBER) || {}).role || ''; } catch (e) { return ''; }
+}
+async function deleteKOLConfirm(id) {
+  const k = KOLStore.kolById(id); if (!k) return;
+  if (!confirm(`Hapus @${k.handle} PERMANEN?\n\nSemua data (status, rate, riwayat negosiasi) ikut terhapus dan tidak bisa dikembalikan. Untuk sekadar mengeluarkan dari pipeline, pakai status CANCEL.`)) return;
+  const ok = await KOLStore.deleteKOL(id);
+  if (!ok) { toast('Gagal menghapus — butuh mode Shared (live) & role owner.'); return; }
+  closeDrawer();
+  renderAll();
+  toast(`@${k.handle} dihapus permanen`);
 }
 function closeDrawer() { $('#drawerWrap').classList.remove('open'); drawerId = null; }
 
@@ -613,6 +662,14 @@ function renderNegList(negs) {
 
 // ── drawer actions ────────────────────────────────────────────
 async function patchField(id, field, val) {
+  // guard: cancelling a KOL is 1 accidental dropdown tap away — confirm first
+  if (field === 'status' && val === 'CANCEL') {
+    const k = KOLStore.kolById(id);
+    if (!confirm(`Batalkan @${(k && k.handle) || id}? Status jadi CANCEL (keluar dari pipeline aktif).`)) {
+      openDrawer(id);                       // re-render so the select snaps back
+      return;
+    }
+  }
   await KOLStore.patchKOL(id, { [field]: val });
   renderKPIs(); renderLatestUpdate(); renderJuni(); renderTracker(); renderPool();
 }
@@ -623,6 +680,10 @@ async function patchConsideration(id, field, val) {
 }
 // ── workflow handlers ──
 async function advanceStatus(id, status, decision) {
+  if (status === 'CANCEL') {
+    const k = KOLStore.kolById(id);
+    if (!confirm(`Tolak & batalkan @${(k && k.handle) || id}?`)) return;
+  }
   const patch = { status };
   if (decision) { patch.decision = decision; patch.decision_date = new Date().toISOString().slice(0, 10); }
   await KOLStore.patchKOL(id, patch);

@@ -51,11 +51,13 @@ exports.handler = async (event) => {
   const authz = (event.headers && (event.headers.authorization || event.headers.Authorization)) || '';
   const jwt = authz.replace(/^Bearer\s+/i, '');
   if (!jwt) return reply(401, { error: 'auth_required' });
+  let memberRole = '';
   try {
     const { data: { user }, error } = await sb.auth.getUser(jwt);
     if (error || !user) return reply(401, { error: 'invalid_token' });
     const { data: m } = await sb.from('members').select('role').eq('email', user.email).maybeSingle();
     if (!m || !['owner', 'content', 'sales'].includes(m.role)) return reply(403, { error: 'forbidden' });
+    memberRole = m.role;
   } catch (e) { return reply(401, { error: 'auth_failed' }); }
 
   try {
@@ -134,6 +136,17 @@ exports.handler = async (event) => {
         const s = await sb.storage.from('briefs').createSignedUrl(body.path, 60 * 60 * 24 * 365);
         if (s.error) throw s.error;
         return reply(200, { ok: true, url: s.data.signedUrl });
+      }
+
+      // Hard delete a KOL + its negotiation rounds. Owner-only — everyone else
+      // can only CANCEL (soft). Guards against wrong-entry cleanup going wide.
+      if (action === 'delete_kol') {
+        if (memberRole !== 'owner') return reply(403, { error: 'owner_only' });
+        if (!body.id) return reply(400, { error: 'no_id' });
+        await sb.from('negotiations').delete().eq('kol_id', body.id);
+        const { error } = await sb.from('kol').delete().eq('id', body.id);
+        if (error) throw error;
+        return reply(200, { ok: true, deleted: body.id });
       }
 
       if (action === 'seed') {

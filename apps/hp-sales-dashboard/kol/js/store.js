@@ -103,6 +103,17 @@ const KOLStore = (() => {
       if (mode === 'backend') await post({ action: 'patch_kol', id, patch });
     },
 
+    // Hard delete (owner-only; enforced server-side). Live-only — false when offline.
+    async deleteKOL(id) {
+      if (mode !== 'backend') return false;
+      const r = await post({ action: 'delete_kol', id });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) return false;
+      cache.kol = cache.kol.filter(k => k.id !== id);
+      cache.negotiations = cache.negotiations.filter(n => n.kol_id !== id);
+      return true;
+    },
+
     negotiationsFor(kolId) {
       return cache.negotiations
         .filter(n => n.kol_id === kolId)

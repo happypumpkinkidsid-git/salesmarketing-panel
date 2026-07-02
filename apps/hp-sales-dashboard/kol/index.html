@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Quicksand:wght@500;600;700&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=16">
+  <link rel="stylesheet" href="css/style.css?v=17">
   <script src="../js/auth.js?v=5"></script>
 </head>
 <body>
@@ -69,6 +69,9 @@
         <span class="count" id="juniCount">0</span>
         <span class="hint">seluruh pipeline aktif per status · warna = siapa lanjut · klik untuk detail</span>
       </div>
+      <input class="global-search" id="globalSearch" type="search"
+        placeholder="🔍 Cari di semua papan — handle / nama / niche / produk / bulan / status…"
+        oninput="onGlobalSearch(this.value)">
       <div id="juni"></div>
     </section>
 
@@ -181,6 +184,6 @@
   <script src="js/data.js?v=4"></script>
   <script src="js/intelligence.js?v=5"></script>
   <script src="js/store.js?v=6"></script>
-  <script src="js/app.js?v=20"></script>
+  <script src="js/app.js?v=21"></script>
 </body>
 </html>

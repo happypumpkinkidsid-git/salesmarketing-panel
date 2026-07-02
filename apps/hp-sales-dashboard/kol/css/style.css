@@ -428,6 +428,26 @@ tbody tr:last-child td{border-bottom:none}
 .add-foot .btn-ghost:hover{background:#e2e6ee}
 @media(max-width:520px){.af-grid{grid-template-columns:1fr}}
 
+/* ── Global search (filters kanban + tracker + pool at once) ── */
+.global-search{width:100%;font-family:inherit;font-size:13.5px;padding:11px 15px;border:1.5px solid var(--line);border-radius:10px;background:#fff;margin-bottom:12px;outline:none;transition:border-color .15s}
+.global-search:focus{border-color:var(--orange)}
+
+/* ── Negotiation log in drawer ── */
+.dr-neg-log{margin-top:16px;border:1px solid var(--line);border-radius:10px;padding:0 13px}
+.dr-neg-log summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--ink);padding:11px 0;list-style-position:inside}
+.dr-neg-log .neg-n{font-size:11px;font-weight:700;color:var(--muted);background:#eef1f6;border-radius:12px;padding:2px 9px;margin-left:6px}
+.dr-neg-log[open]{padding-bottom:13px}
+.neg-add{margin-top:10px;border-top:1px dashed var(--line);padding-top:11px}
+.neg-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.neg-add label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;font-weight:700;color:var(--muted)}
+.neg-add input,.neg-add select{font-family:inherit;font-size:12.5px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.neg-add .neg-full{margin-top:8px}
+.neg-save{margin-top:10px;width:100%}
+
+/* ── Owner-only hard delete ── */
+.dr-delete{display:block;width:100%;margin-top:22px;font-family:inherit;font-size:12px;font-weight:700;color:var(--red);background:none;border:1.5px dashed #eecfcf;border-radius:9px;padding:10px;cursor:pointer;transition:.15s}
+.dr-delete:hover{background:#fdf3f3;border-color:var(--red)}
+
 /* ── Mobile baseline (≤768px): scrollable tables + comfortable tap targets ── */
 @media(max-width:768px){
   /* tables were CLIPPED (overflow:hidden) — most tracker columns unreachable on phone */
@@ -447,6 +467,8 @@ tbody tr:last-child td{border-bottom:none}
   .dr-body select,.dr-body input{min-height:42px}
   /* keep rows compact while horizontally scrolling */
   .table-card .ns-pill{white-space:nowrap}
+  .global-search{min-height:44px}
+  .neg-add input,.neg-add select{min-height:42px}
   /* topbar: let controls wrap under the logo instead of crowding it */
   .topbar-inner{flex-wrap:wrap;gap:8px}
   .tb-spacer{display:none}
