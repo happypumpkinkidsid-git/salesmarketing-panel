@@ -68,6 +68,35 @@ const KOLStore = (() => {
 
     kolById(id) { return cache.kol.find(k => k.id === id); },
 
+    // Create a brand-new KOL row (manual add from the dashboard). Live-only:
+    // returns null if not connected so the UI can prompt to reconnect.
+    async createKOL(fields) {
+      if (mode !== 'backend') return null;
+      const slug = String(fields.handle || '').trim().toLowerCase().replace(/^@/, '').replace(/[^a-z0-9._]/g, '');
+      let id = 'k_' + (slug || 'kol');
+      if (cache.kol.some(k => k.id === id)) id += '_' + Math.random().toString(36).slice(2, 6);
+      let by = '';
+      try { by = (window.HP_MEMBER && window.HP_MEMBER.name) || (window.parent && window.parent.HP_MEMBER && window.parent.HP_MEMBER.name) || ''; } catch (e) {}
+      const row = {
+        id, handle: slug, nama: fields.nama || '', platform: fields.platform || 'Instagram',
+        tier: fields.tier || '', niche: fields.niche || '', followers: Number(fields.followers) || 0,
+        avg_views: 0, er_persen: 0,
+        ig_link: fields.ig_link || (slug ? 'https://instagram.com/' + slug : ''),
+        kontak_wa: fields.kontak_wa || '', ratecard_orig: fields.ratecard_orig || '',
+        scope: fields.scope || '', status: fields.status || 'KANDIDAT',
+        decision: '', decision_date: '', campaign_month: '', produk: '', brief_type: '',
+        angle: '', ref_link: '', content_style: '', family_situation: '', audience: '',
+        rate_cash: 0, rate_barter: 0, rate_card: {},
+        notes_hasna: fields.notes_hasna || '', internal_notes: '',
+        in_pool: true, in_juni: false, source: 'Manual',
+        workflow: { added_by: by, added_at: new Date().toISOString(), pks: [] },
+      };
+      const r = await post({ action: 'upsert_kol', kol: row });
+      if (!r.ok) return null;
+      cache.kol.unshift(row);
+      return row;
+    },
+
     async patchKOL(id, patch) {
       const k = this.kolById(id); if (!k) return;
       Object.assign(k, patch);

@@ -3060,8 +3060,8 @@ function renderProductDatabase() {
         <div>
           <div class="pdb-eyebrow">Shared Knowledge Base · v${db.version}</div>
           <div class="pdb-h1">Product Database</div>
-          <div class="pdb-purpose">${db.purpose}</div>
-          <div class="pdb-srcnote">📚 Sumber tunggal yang dibaca KOL Brief Generator &amp; KOL Command Center.</div>
+          <div class="pdb-purpose">${L(db.purpose)}</div>
+          <div class="pdb-srcnote">📚 ${lang === 'en' ? 'Single source read by the KOL Brief Generator &amp; KOL Command Center.' : 'Sumber tunggal yang dibaca KOL Brief Generator &amp; KOL Command Center.'}</div>
         </div>
         <div class="pdb-lang">
           <button class="pdb-langbtn ${lang === 'en' ? 'active' : ''}" onclick="pdbLang('en')">EN</button>
@@ -3071,10 +3071,10 @@ function renderProductDatabase() {
 
       <details class="pdb-rules">
         <summary>House Rules &amp; Selling-Point Ratio</summary>
-        <ul class="pdb-ruleslist">${db.houseRules.map(r => `<li>${r}</li>`).join('')}</ul>
+        <ul class="pdb-ruleslist">${db.houseRules.map(r => `<li>${L(r)}</li>`).join('')}</ul>
         <div class="pdb-ratio">
-          <div><b>Fashion-forward:</b> ${db.sellingPointRatio.fashionForward}</div>
-          <div><b>Essentials &amp; babywear:</b> ${db.sellingPointRatio.essentialsAndBabywear}</div>
+          <div><b>Fashion-forward:</b> ${L(db.sellingPointRatio.fashionForward)}</div>
+          <div><b>Essentials &amp; babywear:</b> ${L(db.sellingPointRatio.essentialsAndBabywear)}</div>
         </div>
       </details>
 

@@ -837,6 +837,43 @@ async function addNeg(id) {
   openDrawer(id);
 }
 
+// ── add KOL (manual, from dashboard) ──────────────────────────
+function openAddKOL() {
+  const w = $('#addWrap'); if (!w) return;
+  ['ak_handle','ak_nama','ak_niche','ak_followers','ak_rate','ak_wa','ak_scope','ak_notes'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+  const err = $('#ak_err'); if (err) { err.textContent = ''; err.classList.remove('show'); }
+  w.classList.add('open');
+  setTimeout(() => { const h = $('#ak_handle'); if (h) h.focus(); }, 50);
+}
+function closeAddKOL() { const w = $('#addWrap'); if (w) w.classList.remove('open'); }
+
+async function submitAddKOL() {
+  const val = id => (document.getElementById(id)?.value || '').trim();
+  const handle = val('ak_handle').replace(/^@/, '');
+  const err = $('#ak_err');
+  const showErr = m => { if (err) { err.textContent = m; err.classList.add('show'); } };
+  if (!handle) { showErr('Handle / username wajib diisi.'); return; }
+  if (!(await ensureBackend())) { showErr('Belum tersambung ke server — login di dashboard lalu refresh tab ini.'); return; }
+  // Guard against an obvious duplicate handle.
+  const dupe = KOLStore.kol.find(k => (k.handle || '').toLowerCase().replace(/^@/, '') === handle.toLowerCase());
+  if (dupe) { showErr(`@${handle} sudah ada di daftar (${dupe.status}).`); return; }
+
+  const btn = $('#ak_save'); if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan…'; }
+  const row = await KOLStore.createKOL({
+    handle, nama: val('ak_nama'), platform: val('ak_platform') || 'Instagram',
+    tier: val('ak_tier'), niche: val('ak_niche'), followers: val('ak_followers'),
+    kontak_wa: val('ak_wa'), ratecard_orig: val('ak_rate'),
+    scope: val('ak_scope'), status: val('ak_status') || 'KANDIDAT',
+    notes_hasna: val('ak_notes'),
+  });
+  if (btn) { btn.disabled = false; btn.textContent = 'Simpan KOL'; }
+  if (!row) { showErr('Gagal menyimpan. Coba lagi.'); return; }
+  closeAddKOL();
+  renderAll();
+  toast(`✓ @${handle} ditambahkan ke pool`);
+  openDrawer(row.id);                        // jump straight into the new card
+}
+
 // ── export ────────────────────────────────────────────────────
 function exportData() {
   const blob = new Blob([KOLStore.exportJSON()], { type: 'application/json' });

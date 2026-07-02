@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Quicksand:wght@500;600;700&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=14">
+  <link rel="stylesheet" href="css/style.css?v=15">
   <script src="../js/auth.js?v=5"></script>
 </head>
 <body>
@@ -21,6 +21,7 @@
       </div>
       <div class="tb-spacer"></div>
       <span class="mode-badge local" id="modeBadge">● …</span>
+      <button class="btn btn-primary" onclick="openAddKOL()">＋ Tambah KOL</button>
       <button class="btn btn-ghost" onclick="exportData()">⤓ Export</button>
     </div>
   </header>
@@ -130,12 +131,56 @@
     <aside class="drawer" id="drawer"></aside>
   </div>
 
+  <!-- ADD KOL MODAL -->
+  <div class="add-wrap" id="addWrap">
+    <div class="add-backdrop" onclick="closeAddKOL()"></div>
+    <div class="add-modal" role="dialog" aria-label="Tambah KOL">
+      <div class="add-head">
+        <div><div class="add-title">Tambah KOL Baru</div><div class="add-sub">Masuk ke pool sebagai kandidat · tersimpan live &amp; terlihat semua tim</div></div>
+        <button class="add-x" onclick="closeAddKOL()">✕</button>
+      </div>
+      <div class="add-body">
+        <label class="af">Handle / Username <span class="req">wajib</span>
+          <input id="ak_handle" type="text" placeholder="mis. stella0ctaviany" autocomplete="off"></label>
+        <div class="af-grid">
+          <label class="af">Nama<input id="ak_nama" type="text" placeholder="Nama lengkap"></label>
+          <label class="af">Platform
+            <select id="ak_platform"><option>Instagram</option><option>TikTok</option><option>Instagram + TikTok</option></select></label>
+        </div>
+        <div class="af-grid">
+          <label class="af">Tier
+            <select id="ak_tier">
+              <option value="">— pilih</option>
+              <option>Nano</option><option>Nano Supplementer</option><option>Micro KOL</option><option>Macro KOL</option><option>Mega KOL</option>
+            </select></label>
+          <label class="af">Niche<input id="ak_niche" type="text" placeholder="mis. Storytelling, Baby"></label>
+        </div>
+        <div class="af-grid">
+          <label class="af">Followers<input id="ak_followers" type="number" min="0" placeholder="0"></label>
+          <label class="af">Rate diminta (awal)<input id="ak_rate" type="text" placeholder="mis. Rp 4.500.000"></label>
+        </div>
+        <div class="af-grid">
+          <label class="af">Kontak WA<input id="ak_wa" type="text" placeholder="mis. 62812…"></label>
+          <label class="af">Status awal
+            <select id="ak_status"><option>KANDIDAT</option><option>PENDING</option><option>NEGOSIASI</option><option>HOLD</option></select></label>
+        </div>
+        <label class="af">Scope penawaran<input id="ak_scope" type="text" placeholder="mis. Reels, VT, Story Taplink"></label>
+        <label class="af">Catatan untuk Hasna<textarea id="ak_notes" rows="2" placeholder="konteks singkat…"></textarea></label>
+        <div class="add-err" id="ak_err"></div>
+      </div>
+      <div class="add-foot">
+        <button class="btn btn-ghost" onclick="closeAddKOL()">Batal</button>
+        <button class="btn btn-primary" id="ak_save" onclick="submitAddKOL()">Simpan KOL</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
-  <script src="../js/product-db.js?v=3"></script>
+  <script src="../js/product-db.js?v=4"></script>
   <script src="js/data.js?v=4"></script>
   <script src="js/intelligence.js?v=5"></script>
-  <script src="js/store.js?v=5"></script>
-  <script src="js/app.js?v=18"></script>
+  <script src="js/store.js?v=6"></script>
+  <script src="js/app.js?v=19"></script>
 </body>
 </html>

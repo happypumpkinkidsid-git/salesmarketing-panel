@@ -7,17 +7,20 @@
 window.HP_PRODUCT_DB = {
   "knowledgeBase": "Happy Pumpkin — KOL Product Marketing KB",
   "version": "1.1",
-  "purpose": "Base knowledge for generating KOL/creator briefs. Each collection has product story, material, USPs (say), what-to-show, what-to-avoid, hook lines (EN/ID), keyword cloud, and the list of articles in the collection (internal reference).",
+  "purpose": {
+    "en": "Base knowledge for generating KOL/creator briefs. Each collection has product story, material, USPs (say), what-to-show, what-to-avoid, hook lines (EN/ID), keyword cloud, and the list of articles in the collection (internal reference).",
+    "id": "Basis pengetahuan untuk membuat brief KOL/kreator. Tiap koleksi berisi cerita produk, material, USP (Say), yang difilmkan (Show), yang dihindari (Avoid), kalimat pembuka (Hooks), keyword cloud, dan daftar artikel dalam koleksi (referensi internal)."
+  },
   "houseRules": [
-    "Keep it real over polished.",
-    "Show the child actually wearing/playing in the product.",
-    "Film fabric & detail close-ups in good light.",
-    "Prices are guidance — confirm live stock & price before quoting.",
-    "Always tag @happypumpkin.kids."
+    { "en": "Keep it real over polished.", "id": "Utamakan yang natural, bukan yang terlalu dipoles." },
+    { "en": "Show the child actually wearing/playing in the product.", "id": "Tunjukkan anak benar-benar memakai/bermain dengan produknya." },
+    { "en": "Film fabric & detail close-ups in good light.", "id": "Rekam close-up bahan & detail dengan pencahayaan bagus." },
+    { "en": "Prices are guidance — confirm live stock & price before quoting.", "id": "Harga sifatnya panduan — konfirmasi stok & harga terbaru sebelum quote." },
+    { "en": "Always tag @happypumpkin.kids.", "id": "Selalu tag @happypumpkin.kids." }
   ],
   "sellingPointRatio": {
-    "fashionForward": "~80% stylish function / context (where & when worn, the moment, the look), ~20% material",
-    "essentialsAndBabywear": "function-led — lead with utility (breathability, value, safety)"
+    "fashionForward": { "en": "~80% stylish function / context (where & when worn, the moment, the look), ~20% material", "id": "~80% fungsi bergaya / konteks (kapan & di mana dipakai, momennya, tampilannya), ~20% material" },
+    "essentialsAndBabywear": { "en": "function-led — lead with utility (breathability, value, safety)", "id": "berbasis fungsi — mulai dari manfaat (breathability, value, keamanan)" }
   },
   "changelog": [
     "v1.1 — PureKnit repositioned (Japanese seamless + 100% cotton/zero-synthetic first, luxurious + holiday/travel, shop-international-from-home parent, not gift/kado). Added UltraCool collection (CoolTouch cold-to-touch, never-go-back, patent + 1yr R&D, upcoming-models tease)."

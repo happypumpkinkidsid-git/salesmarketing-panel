@@ -13,6 +13,15 @@
 [functions]
   node_bundler = "esbuild"
 
+# Scheduled email digests → dwiputratex@gmail.com (cron is UTC; WIB = UTC+7).
+# EOD daily digest at 11:00 UTC = 18:00 WIB (new KOLs today + pipeline/budget snapshot).
+[functions."digest-daily"]
+  schedule = "0 11 * * *"
+
+# "Actions needed" nudge every 3 days at 02:00 UTC = 09:00 WIB.
+[functions."digest-actions"]
+  schedule = "0 2 */3 * *"
+
 # SPA-style fallback not needed (multi-file static). Cache headers for assets:
 [[headers]]
   for = "/js/*"
