@@ -428,6 +428,31 @@ tbody tr:last-child td{border-bottom:none}
 .add-foot .btn-ghost:hover{background:#e2e6ee}
 @media(max-width:520px){.af-grid{grid-template-columns:1fr}}
 
+/* ── Mobile baseline (≤768px): scrollable tables + comfortable tap targets ── */
+@media(max-width:768px){
+  /* tables were CLIPPED (overflow:hidden) — most tracker columns unreachable on phone */
+  .table-card{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table-card table{min-width:640px}
+  /* keep the KOL identity column visible while scrolling the row */
+  .table-card th:first-child,.table-card td:first-child{position:sticky;left:0;background:var(--card);z-index:1}
+  /* tap targets ≥44px */
+  .tk-filter{min-height:44px;padding:10px 14px}
+  .pool-controls input,.pool-controls select{min-height:44px}
+  .rate-pill,.reject-pill{min-height:42px;padding:10px 12px}
+  .pks-x{min-width:42px;min-height:42px;font-size:15px}
+  .pks-qty{min-height:42px}
+  .dr-close,.add-x{width:42px;height:42px}
+  .ai-send{min-height:44px}
+  .wf-btn{min-height:42px}
+  .dr-body select,.dr-body input{min-height:42px}
+  /* keep rows compact while horizontally scrolling */
+  .table-card .ns-pill{white-space:nowrap}
+  /* topbar: let controls wrap under the logo instead of crowding it */
+  .topbar-inner{flex-wrap:wrap;gap:8px}
+  .tb-spacer{display:none}
+  .btn{min-height:44px}
+}
+
 /* happypumpkin wordmark logo */
 .hp-wordmark{font-family:'Quicksand','Plus Jakarta Sans',sans-serif;font-weight:700;color:var(--orange);letter-spacing:-.5px;line-height:1;white-space:nowrap;display:inline-block}
 .tb-logo .hp-wordmark{font-size:28px}

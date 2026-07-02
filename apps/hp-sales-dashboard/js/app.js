@@ -71,6 +71,7 @@ function escHtml(s) {
 
 function navigate(sec) {
   state.section = sec;
+  document.body.classList.remove('nav-open');   // close the mobile off-canvas nav
   try { if ((location.hash || '').slice(1) !== sec) history.replaceState(null, '', '#' + sec); } catch (e) {}
   document.querySelectorAll('.nav-item[data-section]').forEach(el =>
     el.classList.toggle('active', el.dataset.section === sec)

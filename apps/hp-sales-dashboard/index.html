@@ -6,7 +6,7 @@
   <title>happypumpkin — Sales & KOL</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap">
-  <link rel="stylesheet" href="css/main.css?v=8">
+  <link rel="stylesheet" href="css/main.css?v=9">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#16233f">
@@ -100,9 +100,13 @@
     </div>
   </aside>
 
+  <!-- mobile nav backdrop (off-canvas sidebar) -->
+  <div class="nav-backdrop" onclick="document.body.classList.remove('nav-open')"></div>
+
   <!-- ===== MAIN ===== -->
   <main class="main">
     <header class="topbar">
+      <button class="menu-btn" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
       <div>
         <div class="topbar-title" id="topbarTitle">Daily Brief</div>
         <div class="topbar-sub" id="topbarSub">Loading…</div>
@@ -155,6 +159,6 @@
 <script src="js/product-db.js?v=4"></script>
 <script src="js/config.js?v=4"></script>
 <script src="js/fulfillment-data.js?v=1"></script>
-<script src="js/app.js?v=17"></script>
+<script src="js/app.js?v=18"></script>
 </body>
 </html>

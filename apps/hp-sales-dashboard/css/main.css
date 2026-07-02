@@ -1551,3 +1551,23 @@ textarea.kol-inp { padding: 9px 10px; }
 .hp-wordmark { font-family: 'Quicksand', 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; line-height: 1; white-space: nowrap; display: inline-block; }
 .sidebar-logo .hp-wordmark { font-size: 27px; }
 .hp-auth-wordmark { font-size: 32px; }
+
+/* ── Mobile baseline (≤768px): off-canvas sidebar + fluid main ──
+   The fixed 240px sidebar left only ~figure-width for content on phones.
+   Sidebar becomes an off-canvas drawer toggled by the ☰ button (body.nav-open). */
+.menu-btn { display: none; }
+.nav-backdrop { display: none; }
+@media (max-width: 768px) {
+  .menu-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; border: none; border-radius: 10px; background: var(--sidebar-bg); color: #fff; font-size: 19px; cursor: pointer; margin-right: 12px; }
+  .sidebar { transform: translateX(-100%); transition: transform .22s ease; width: min(300px, 84vw); box-shadow: 8px 0 30px rgba(15,25,45,.25); }
+  body.nav-open .sidebar { transform: translateX(0); }
+  .nav-backdrop { position: fixed; inset: 0; background: rgba(15,25,45,.45); z-index: 99; }
+  body.nav-open .nav-backdrop { display: block; }
+  .main { margin-left: 0; }
+  .topbar { padding: 12px 14px; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
+  .topbar-actions { margin-left: auto; }
+  .content { padding: 14px; }
+  /* generic guards */
+  img, svg, video { max-width: 100%; height: auto; }
+  .topbar-actions .btn, .refresh-btn { min-height: 44px; }
+}

@@ -255,6 +255,20 @@ function renderBudget() {
       <div class="bud-sub">pilih <b>Bulan Campaign</b> agar masuk anggaran bulan</div>
     </div>`;
   }
+  // Committed to months OUTSIDE the visible window (e.g. bookings 3+ months out)
+  // must not silently disappear — surface them so budget totals always reconcile.
+  const winLabels = budgetWindow().map(w => w.label);
+  const outside = Object.keys(byMonth).filter(m => m !== '__none__' && !winLabels.includes(m));
+  if (outside.length) {
+    const oCash = outside.reduce((s, m) => s + byMonth[m].cash, 0);
+    const oCount = outside.reduce((s, m) => s + byMonth[m].count, 0);
+    html += `<div class="bud-cell bud-none">
+      <div class="bud-mo">Di luar jendela</div>
+      <div class="bud-amt">${fmtRpShort(oCash)}</div>
+      <div class="bud-meta">${oCount} deal · ${outside.map(esc).join(', ')}</div>
+      <div class="bud-sub">terikat ke bulan di luar tampilan 5 bulan ini</div>
+    </div>`;
+  }
   el.innerHTML = html;
 }
 function kpi(label, num, sub, tone) {
@@ -463,7 +477,8 @@ function openDrawer(id) {
           </select></label>
         <label>Bulan Campaign
           <select onchange="patchField('${id}','campaign_month',this.value)">
-            ${MONTHS_OPTS.map(m => `<option value="${m}" ${m===(k.campaign_month||'')?'selected':''}>${m||'— pilih bulan'}</option>`).join('')}
+            ${(MONTHS_OPTS.includes(k.campaign_month||'') ? MONTHS_OPTS : [...MONTHS_OPTS, k.campaign_month])
+              .map(m => `<option value="${m}" ${m===(k.campaign_month||'')?'selected':''}>${m||'— pilih bulan'}</option>`).join('')}
           </select></label>
         <label>Tipe Brief
           <select onchange="patchField('${id}','brief_type',this.value)">
@@ -640,10 +655,15 @@ function activeRatePill(k) {
   return '';
 }
 function nextMonthOf(m) {
-  const i = MONTHS_OPTS.indexOf(m);
-  if (i > 0 && i < MONTHS_OPTS.length - 1) return MONTHS_OPTS[i + 1];
-  if (i <= 0) return MONTHS_OPTS[1];          // blank/first → first real month
-  return MONTHS_OPTS[MONTHS_OPTS.length - 1]; // already last → stay
+  // Calendar-based (NOT dropdown-position based — the dropdown starts with past
+  // months for the budget back-window, so index+1 could park a KOL in the past).
+  const parts = String(m || '').trim().split(/\s+/);
+  const mi = ID_MONTH_NAMES.indexOf(parts[0]);
+  const now = new Date();
+  const base = (mi >= 0 && /^\d{4}$/.test(parts[1] || ''))
+    ? new Date(+parts[1], mi, 1)
+    : new Date(now.getFullYear(), now.getMonth(), 1);   // blank/unknown → from current month
+  return idMonthLabel(new Date(base.getFullYear(), base.getMonth() + 1, 1));
 }
 async function setRatePill(id, pill) {
   const k = KOLStore.kolById(id); if (!k) return;
@@ -843,6 +863,14 @@ function openAddKOL() {
   ['ak_handle','ak_nama','ak_niche','ak_followers','ak_rate','ak_wa','ak_scope','ak_notes'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
   const err = $('#ak_err'); if (err) { err.textContent = ''; err.classList.remove('show'); }
   w.classList.add('open');
+  // Enter anywhere in the form submits (textarea keeps Enter for newlines); Esc closes.
+  if (!w._keysBound) {
+    w._keysBound = true;
+    w.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); submitAddKOL(); }
+      if (e.key === 'Escape') closeAddKOL();
+    });
+  }
   setTimeout(() => { const h = $('#ak_handle'); if (h) h.focus(); }, 50);
 }
 function closeAddKOL() { const w = $('#addWrap'); if (w) w.classList.remove('open'); }
